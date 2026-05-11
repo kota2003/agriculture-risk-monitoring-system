@@ -1,0 +1,35 @@
+# .pre-commit-config.yaml
+# black + ruff orchestration for agriculture-risk-monitoring-system.
+# Activated locally via: pre-commit install
+# See: https://pre-commit.com/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+      - id: check-merge-conflict
+
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3.12
+        args: ["--line-length=88"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.4
+    hooks:
+      - id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
+
+# Notes:
+# - Hooks run on every `git commit` once `pre-commit install` is executed.
+# - `check-added-large-files` blocks commits > 5MB to prevent
+#   Project 4 lesson 2 (large model files accidentally tracked).
+# - black handles formatting; ruff handles linting with auto-fix.
+# - Python 3.12 explicitly pinned in black (Project 4 lesson 5 prevention).

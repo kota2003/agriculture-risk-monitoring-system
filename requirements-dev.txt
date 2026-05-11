@@ -1,0 +1,22 @@
+# requirements-dev.txt
+# agriculture-risk-monitoring-system - development-only dependencies
+#
+# These are NOT required to run the analysis. They support code quality
+# during development:
+#   - black: auto-formatting
+#   - ruff: linting
+#   - pre-commit: git hook orchestration
+#
+# Recruiters reproducing the analysis only need `pip install -r requirements.txt`.
+# Developers contributing to the project additionally run:
+#   pip install -r requirements-dev.txt
+#   pre-commit install
+
+# --- Formatting ---
+black>=24.10
+
+# --- Linting ---
+ruff>=0.7
+
+# --- Pre-commit orchestration ---
+pre-commit>=4.0

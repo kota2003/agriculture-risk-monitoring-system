@@ -1,0 +1,37 @@
+{
+  "_comment_purpose": "Repo-level VSCode settings. Committed intentionally per Scope §11.8 to pin the Python interpreter and prevent the Project 4 lesson 5 interpreter-mismatch issue. Personal preferences (themes, keybindings) belong in user settings, not here.",
+
+  "python.defaultInterpreterPath": ".venv\\Scripts\\python.exe",
+
+  "python.terminal.activateEnvironment": true,
+
+  "python.analysis.extraPaths": ["src"],
+
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": false,
+
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+
+  "ruff.enable": true,
+  "ruff.lint.run": "onSave",
+
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  "search.exclude": {
+    "**/.venv": true,
+    "**/__pycache__": true,
+    "**/.ipynb_checkpoints": true,
+    "**/data/raw": true,
+    "**/data/processed": true,
+    "**/outputs/models": true
+  }
+}

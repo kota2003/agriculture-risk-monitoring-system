@@ -1,0 +1,82 @@
+# ============================================================
+# .gitignore for agriculture-risk-monitoring-system (Project 5)
+# Pre-emptively incorporates Project 4 lessons 1-4 (see PROJECT_LOG).
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Data (Project 5 reproduce-from-code policy) ---
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/manifest.yaml
+data/processed/*
+!data/processed/.gitkeep
+
+# --- Outputs - models gitignored due to file size (Project 4 lesson 2) ---
+# Reproducible via scripts/phaseXX_sYY_*.py training scripts.
+outputs/models/*
+!outputs/models/.gitkeep
+
+# --- Phase summaries (internal handoff artefacts, PROJECT_WORKFLOW §10) ---
+docs/phase_summaries/*
+!docs/phase_summaries/.gitkeep
+
+# --- Scratch / dump files (Project 4 lesson 4 pre-emption) ---
+*_dump.*
+*_dump.txt
+*_dump.csv
+scratch_*
+temp_*
+wip_*
+*.tmp
+
+# --- Backup / version files (Project 4 lesson 3 pre-emption) ---
+*_v[0-9].py
+*_v[0-9][0-9].py
+*_FINAL*
+*_final_v*
+*.bak
+
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.code-workspace
+*.swp
+*.swo
+
+# --- VSCode: settings.json is committed; everything else is local ---
+.vscode/*
+!.vscode/settings.json
+
+# --- Coverage / build artefacts ---
+.coverage
+htmlcov/
+build/
+dist/
+*.log
