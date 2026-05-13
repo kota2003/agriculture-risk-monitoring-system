@@ -7,7 +7,10 @@
 #   - Group by purpose with comments
 #   - Add new entries when a new Phase first imports them
 #
-# Phase 00 baseline: Phase 01 (Data Acquisition) needs.
+# Phase 00 baseline + Phase 01 (Data Acquisition) under scope v4.
+# Scope v4 introduces grid-based SILO ingestion with ACLUMP cropping mask,
+# AAGIS shapefile handling, and AGFD validation prep — all of which require
+# the spatial / raster stack below from Phase 01 onward.
 
 # --- Core data ---
 pandas>=2.2
@@ -19,6 +22,17 @@ pyyaml>=6.0
 # --- HTTP / API ingestion (Phase 01: SILO, BoM, ABARES, OpenWeather) ---
 requests>=2.31
 
+# --- Spatial / raster (Phase 01: AAGIS shapefile, ACLUMP land-use mask, SILO grid; reused Phase 04+ and Phase 09 AGFD) ---
+xarray>=2024.1
+netCDF4>=1.6
+rasterio>=1.3
+geopandas>=1.0
+shapely>=2.0
+pyproj>=3.6
+
+# --- Progress / UX (long SILO grid downloads) ---
+tqdm>=4.66
+
 # --- Notebook tooling ---
 jupyter>=1.0
 ipykernel>=6.29
@@ -26,9 +40,10 @@ nbformat>=5.10
 nbconvert>=7.16
 
 # Note: additional libraries will be added Phase-by-Phase:
-#   Phase 03 EDA: matplotlib, seaborn
-#   Phase 04 indicators: scipy
-#   Phase 05 EVT: scipy.stats, pyextremes
-#   Phase 06 statistical: statsmodels, linearmodels
-#   Phase 07 ML: scikit-learn, xgboost, lightgbm, shap
-#   Phase 08 spatial: geopandas, libpysal, contextily
+#   Phase 03 EDA:           matplotlib, seaborn
+#   Phase 04 indicators:    scipy
+#   Phase 05 EVT:           scipy.stats, pyextremes
+#   Phase 06 statistical:   statsmodels, linearmodels
+#   Phase 07 ML:            scikit-learn, xgboost, lightgbm, shap
+#   Phase 08 spatial extra: libpysal, contextily  (geopandas/shapely/pyproj already installed in Phase 01)
+#   Phase 09 synthesis:     (no new deps; AGFD via xarray/netCDF4 already installed)

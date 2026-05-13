@@ -132,3 +132,61 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name
 **Impact:** Scope is now part of the public repo deliverable.
 
 ---
+## 2026-05-14 — Phase 01, Step 00 (pre-execution scope recalibration)
+
+**Context:** Before launching Phase 01 (Data Acquisition), Kota explicitly recalibrated
+the Project 5 quality bar to Master-research-grade portfolio standards. The evaluation
+lenses now include research-lab admissions committees, professors, and academically
+literate hiring managers — the project must defend itself as a Master researcher's
+portfolio piece, not merely as a polished industry artefact. Reviewing the v3 scope and
+Claude's preliminary Phase 01 recommendations (point-centroid SILO sampling at AAGIS
+region centroids) under this raised bar revealed engineering compromises that would
+not withstand research-peer-review scrutiny — specifically (a) Modifiable Areal Unit
+Problem (MAUP) exposure from single-unit framing, (b) information loss from
+pre-aggregating climate data before indicator computation, (c) absence of observed-vs-
+derived data discipline regarding the Australian Gridded Farm Data (AGFD).
+
+**Decision:** Bump scope to v4, with substantive revisions across the following
+sections (full v4 document supersedes v3):
+1. New §3.6 — Spatial Resolution Strategy (mixed-resolution philosophy).
+2. §4.1 rewritten — SILO ingestion via grid-based subsetting with ACLUMP cropping-area
+   mask, replacing v3 point-centroid strategy.
+3. New §4.4 — ACLUMP land-use mask added as primary data source.
+4. New §4.6 — AGFD added as Phase 09 independent validation benchmark, with explicit
+   observed-vs-derived discipline.
+5. §5.1 + §5.2 clarified — climate indicators computed at SILO grid resolution; EVT
+   fitting at grid level with region-level rollup.
+6. §5.6 expanded — MAUP robustness study (primary results re-computed at GRDC
+   agro-ecological zone aggregation) and AGFD validation added to Pillar 6 synthesis.
+7. §3.1 — AAGIS region formally named as primary yield unit, zone × region hierarchy
+   documented, known geometry-error caveat noted.
+8. §6 phase plan — Phase 01 acquires ACLUMP mask; Phase 02 adds grid-vs-region-
+   aggregate consistency check; Phase 09 ingests AGFD and runs MAUP study.
+9. §9 tech stack — xarray, netCDF4, rasterio added for grid/raster handling.
+10. §12 risks — AAGIS region climate-boundary non-alignment + observed-vs-derived
+    data discipline explicitly acknowledged.
+
+**Rationale:** A Master-researcher portfolio must demonstrate (i) explicit MAUP
+awareness, (ii) spatial-unit selection defended on methodological grounds rather than
+data convenience, (iii) strict observed-vs-derived data discipline, (iv) robustness
+across spatial aggregation choices. The v3 single-unit framing and centroid-point
+SILO strategy were defensible for an industry portfolio but constituted methodological
+undersell for Master-level research framing. The mixed-resolution design adds
+engineering work in Phase 01–04 but produces results that survive peer review.
+
+**Impact:**
+- Phase 01 ingestion list grows by one primary source (ACLUMP) and SILO ingestion
+  shape changes (grid-based with mask, not point-based).
+- Phase 02 gains a grid-vs-region-aggregate consistency check.
+- Phase 04 climate indicators computed at grid resolution before any region aggregation.
+- Phase 05 EVT methodological strength improves substantially via grid-level fitting.
+- Phase 09 synthesis includes MAUP robustness section + AGFD independent validation.
+- Estimated additional effort: ~1–2 weeks in Phase 01–02; absorbed within v3's
+  stated 17–31 week band, no need to widen the band.
+
+**Honesty note:** This recalibration was triggered by explicit user instruction to
+raise the quality bar, not by discovery of new technical information. Claude's initial
+recommendation in this chat (point-centroid SILO sampling) was below the new bar and
+is retracted in favour of the v4 design. Per the Project 4 adaptive-override convention
+(documented in portfolio_finalisation_playbook §15), the retraction is documented here
+explicitly rather than silently overwritten.
