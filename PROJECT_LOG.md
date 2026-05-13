@@ -190,3 +190,35 @@ recommendation in this chat (point-centroid SILO sampling) was below the new bar
 is retracted in favour of the v4 design. Per the Project 4 adaptive-override convention
 (documented in portfolio_finalisation_playbook §15), the retraction is documented here
 explicitly rather than silently overwritten.
+## 2026-05-14 — Phase 01, Step 01: AAGIS regions ingested and manifest initialised
+
+**Context:** First substantive data acquisition step under scope v4. AAGIS
+region shapefile selected in pre-Phase 01 recalibration as the primary yield
+spatial unit (per scope v4 section 3.1).
+
+**Decisions made during execution:**
+- *Persistence format:* GeoPackage (.gpkg) chosen over re-emitting a shapefile
+  for the repaired output. Rationale: single-file, OGC standard, no 10-char
+  attribute name truncation, CRS in metadata.
+- *Geometry repair tool:* shapely.validation.make_valid() (Python equivalent
+  of read.abares R package's sf::st_make_valid()). Per scope v4 section 3.1
+  / section 12.2 known quirk.
+- *URL capture strategy:* manual DevTools URL extraction one time, hardcoded
+  in scripts/phase01_s01_*.py. Documented retrieval procedure in script
+  docstring for future re-capture if URL rots.
+- *Manifest schema:* v1.0, per-source dict with canonical_name, publisher,
+  role, access, vintage, license, classification (observed vs derived),
+  field_dictionary, known_quirks, persisted_paths, notes.
+
+**Run results (TO BE FILLED FROM EXECUTION LOG):**
+- Resolved URL: <paste>
+- Region count: <N>
+- Zone column: <name>; zones present: <list>
+- CRS: <EPSG:...>
+- Geometry repair: <N> invalid before, 0 after
+- Bounding box: <minx, miny, maxx, maxy>
+
+**Impact:** AAGIS regions available for downstream steps as
+`data/processed/aagis_regions_repaired.gpkg`. Used directly in s02 (ACLUMP
+land-use raster's clip to AAGIS extent) and s03 (cropping mask spatial
+join with SILO grid).
