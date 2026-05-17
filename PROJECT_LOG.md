@@ -222,3 +222,179 @@ spatial unit (per scope v4 section 3.1).
 `data/processed/aagis_regions_repaired.gpkg`. Used directly in s02 (ACLUMP
 land-use raster's clip to AAGIS extent) and s03 (cropping mask spatial
 join with SILO grid).
+
+
+---
+
+## 2026-05-14 — Phase 01, Step 01: AAGIS regions ingested; scope v4 corrections from empirical findings
+
+**Context:** First substantive data acquisition step under scope v4.
+AAGIS region shapefile selected in pre-Phase 01 recalibration as the
+primary yield spatial unit (per scope v4 section 3.1).
+
+**Execution summary.** Successful s01 run on 2026-05-14:
+- URL: https://www.agriculture.gov.au/sites/default/files/documents/aagis_asgs16v1_g5a.shp_.zip
+- Vintage: ASGS16 v1 (Last-Modified header 2020-08-04; ABARES page last
+  updated 2024-09-09 but underlying file unchanged since 2020-08-04)
+- File size: 2,637,311 bytes (2.52 MB compressed)
+- ETag at ingest: "5f28c824-283dff"
+- 32 features, CRS=EPSG:4283 (GDA94 geographic)
+- Columns: aagis, class, name, zone, geometry (all lowercase)
+- 2 of 32 geometries invalid on input (indices [26, 31]); both repaired
+  successfully by GeoSeries.make_valid() (vectorized via shapely 2.x)
+- Persisted as data/processed/aagis_regions_repaired.gpkg (3.84 MB)
+- Bounding box (xmin, ymin, xmax, ymax):
+  (112.92, -43.74, 153.64, -9.14) — entire Australia continent
+
+**Decisions made during execution:**
+- Persistence format: GeoPackage (.gpkg) over re-emitting a shapefile.
+  Single-file, OGC standard, no 10-character attribute name truncation,
+  CRS in metadata.
+- Geometry repair: GeoSeries.make_valid() (vectorized) rather than
+  per-feature .apply(make_valid). Python equivalent of read.abares R
+  package's sf::st_make_valid().
+- URL capture: manual one-time DevTools extraction, hardcoded in
+  scripts/phase01_s01_*.py with documented re-capture procedure in
+  docstring for resilience to future URL rot.
+
+**Empirical findings requiring scope v4 corrections (made in-place):**
+
+1. *Region count.* Scope v4 section 3.1 stated "~60 regions"; actual
+   is **32 regions** in ASGS16 v1 vintage. Of those, 20 are cropping-
+   relevant (12 Wheat Sheep + 8 High Rainfall zones); 12 Pastoral-zone
+   regions are excluded from broadacre cropping analysis. Scope v4
+   section 3.1 corrected in-place.
+
+2. *Zone name spelling.* Scope v4 used hyphenated forms "Wheat-sheep"
+   and "High-rainfall"; ABARES official attribute table uses spaces:
+   "Wheat Sheep" and "High Rainfall". Scope v4 section 3.1 corrected
+   in-place to match ABARES official spelling.
+
+3. *MAUP-study scale caveat.* With 20 cropping AAGIS regions vs
+   ~21 GRDC agro-ecological zones, the scope v4 section 5.6.2 MAUP
+   robustness study tests **boundary-placement** sensitivity rather
+   than **scale** sensitivity. Both are valid MAUP dimensions, but
+   the framing of the synthesis-phase write-up must reflect this
+   honestly. Scope v4 section 3.6.2 augmented with an "Empirical
+   scale caveat" paragraph. A true scale-MAUP extension (e.g.,
+   state-level n=7-8 aggregation) is logged as a possible Phase 09
+   extension if time permits.
+
+**Structural discovery for downstream use:**
+
+The `class` column (3-digit integer) appears to encode
+**state × zone × region** hierarchically:
+- 1st digit = state (1=NSW, 2=VIC, 3=QLD, 4=SA, 5=WA, 6=TAS, 7=NT)
+- 2nd digit = zone (1=Pastoral, 2=Wheat Sheep, 3=High Rainfall)
+- 3rd digit = region index within state × zone combination
+
+All 32 codes are consistent with this decoding. Pattern matches the
+empirically-observed zone distribution (12/12/8) and region name
+prefixes (NSW Far West has class=111 = NSW/Pastoral/1, VIC Mallee
+has class=221 = VIC/Wheat Sheep/1, etc.). Formal verification
+deferred to Phase 03 EDA.
+
+**Impact:**
+- AAGIS regions available as data/processed/aagis_regions_repaired.gpkg
+  for downstream steps (gitignored; reproducible from script).
+- Manifest.yaml records resolved URL, retrieval metadata, license,
+  observed-vs-derived classification, known quirks, validation results,
+  and structural notes.
+- Scope v4 section 3.1 + 3.6.2 patched in-place to reflect empirical
+  truth; no version bump to v5 since the methodology design is
+  unchanged, only the numerical/spelling parameters that backed it.
+
+**Honesty note on prior turn:** Claude's previous-turn hypothesis that
+.apply(make_valid) was causing a hang was unverified speculation;
+the actual cause of the first run's interruption was likely
+output-flush timing being interpreted as hang. The second run with
+the original .apply() code would also have completed in seconds had
+it been allowed to continue. The switch to vectorized
+GeoSeries.make_valid() was retained because it is genuinely a more
+appropriate API for shapely 2.x / geopandas 1.x environments, but
+this is a code-quality improvement, not a bug fix.
+
+
+## 2026-05-14 — Phase 01, Step 02: ACLUMP land-use raster ingested
+
+**Context:** Phase 01 Step 02 retrieves the ACLUMP Catchment Scale Land Use
+of Australia raster (December 2023 version 2), which serves as the source
+of the broadacre cropping mask used to spatially subset SILO grid retrieval
+(scope v4 §4.1, §4.4) and to define the spatial scope of Pillar 1–2
+grid-level analyses.
+
+**Decisions (locked in pre-execution, summarised here for the audit trail):**
+
+1. **Raster GeoTIFF as primary data** (not commodities vector, not
+   simplified 19-class raster). Rationale: closest to raw upstream data;
+   ALUM 8 full classification preserved; commodities vector self-declared
+   as not nationally complete; simplified raster coarsens broadacre vs
+   grazing distinction.
+2. **ALUM secondary class `3.3 Cropping` only as mask target** (codes
+   330–338). Excluded: `4.3 Irrigated cropping` (430–439) per scope v4
+   §3.2 out-of-scope; `3.6 Land in transition` (360–365) due to
+   semantically-ambiguous "unknown land use" definition.
+3. **s02 (raster acquisition) split from s03 (mask construction)**.
+   Rationale: single responsibility; intermediate raw state inspectable;
+   diagnostic gate before SILO grid reproject.
+4. **Commodities supplementary vector deferred** (not retrieved in s02).
+   Revisit only if s03 cropping mask sanity check fails.
+
+**ALUM 8 code lookup** (Table A1 of `CLUM_DescriptiveMetadata_December2023_v2.docx`,
+permanently archived to `data/raw/aclump/`):
+- `3.3 Cropping`: 330, 331, 332, 333, 334, 335, 336, 337, 338
+- `4.3 Irrigated cropping`: 430–439 (EXCLUDED from mask)
+- `3.6 Land in transition`: 360–365 (EXCLUDED from mask)
+
+**Empirical findings recorded for future diagnostics:**
+
+*(a) ZIP internal structure:* `clum_50m_2023_v2.zip` contains the main
+`clum_50m_2023_v2.tif` plus ArcGIS/QGIS layer files and a nested
+`scale_date_update.zip` (date / scale / updates rasters). Only the main
+GeoTIFF is extracted; the rest is left compressed for provenance.
+
+*(b) State-level vintage non-uniformity:* The CLUM raster aggregates state
+vector datasets of differing vintages: ACT 2012 (v7→v8 converted), NSW
+2017 v1.5, SA 2017, WA 2018, NT 2022, VIC 2021, TAS 2021, QLD GBR 2021.
+Core broadacre wheat regions (NSW, WA) are mapped at vintages 6–8 years
+prior to project execution date. Acceptable under scope v4 §3.3
+modern-agronomy framing (1980+ yield window tolerates 5–10 yr
+cropping-extent stationarity assumption), but documented here for Phase 03
+EDA state-level sanity checks.
+
+*(c) WA visual attribution and SA Adelaide NODATA fill:* WA ALUM 4.0.0 /
+5.0.0 / 6.0.0 attributed to secondary level by satellite visual
+interpretation; SA Adelaide voids filled from ABS 2021 mesh blocks.
+**Neither affects the `3.3 Cropping` broadacre mask** (handled in original
+vector layers / not assigned to 3.3 in mesh block translation, Table 8).
+
+*(d) Raster vs advertised size:* HTTP `Content-Length` = 158,077,503 bytes
+(150.7 MB); ABARES download page advertises "126 MB" (stale rounding from
+the February 2024 release). HTTP header is authoritative.
+
+**Provenance captured at retrieval time:**
+- Raster ZIP: 158,077,503 bytes, ETag `"667cf4a9-96c123f"`,
+  Last-Modified `Thu, 27 Jun 2024 05:12:09 GMT`, sha256 `<filled by script>`
+- Metadata docx: `<size filled by script>`, sha256 `<filled by script>`
+
+**Sanity check result (s03 entry gate):**
+- Broadacre 3.3 Cropping coverage: `<broadacre_fraction filled by script>`
+  (expected range: 4–15% of non-NODATA pixels per scope v4 §4.1)
+- In expected range: `<bool filled by script>`
+
+**Impact:**
+- Phase 01 Step 03 can now proceed: `src/processing/cropping_mask.py`
+  will reproject the ACLUMP raster from EPSG:3577 to a 0.05° lat/lon grid
+  matching SILO, classify pixels using the locked ALUM 3.3 code set, and
+  persist a binary cropping mask as `data/processed/cropping_mask.nc`.
+- `data/raw/manifest.yaml` updated with full `aclump` source entry,
+  including ALUM code lookup, known quirks, and provenance values.
+
+**Future contingency (recorded for traceability):** If s03 mask sanity
+checks fail (e.g., cropping pixel count in WA Wheatbelt / NSW Riverina /
+VIC Mallee below threshold, or per-AAGIS-region cropping cell count
+inadequate for grid-level EVT fitting), the documented backout options are
+(in order of preference): (i) expand mask to include `3.6 Land in
+transition`; (ii) supplement with ACLUMP commodities vector; (iii) revisit
+data source choice. Decision rules pre-committed here so any backout is
+documented rather than retroactively justified.

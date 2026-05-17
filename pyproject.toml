@@ -1,0 +1,37 @@
+# pyproject.toml
+# agriculture-risk-monitoring-system — tool configuration
+#
+# This file configures developer tooling (black, ruff). It does NOT declare
+# the project as a Python package — Project 5 is a research repository, not
+# a distributable library. No [build-system] or [project] sections are
+# included for this reason.
+#
+# Coverage:
+#   - black:  line-length 88 (matches .pre-commit-config.yaml)
+#   - ruff:   line-length 88, default rule set, with per-file exceptions for
+#             scripts/ where the sys.path injection pattern requires
+#             post-injection imports (E402 false positive).
+
+# --- black --------------------------------------------------------------
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+# --- ruff ---------------------------------------------------------------
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+# Default rule set (E, F). Project may opt into more rule families later.
+
+[tool.ruff.lint.per-file-ignores]
+# Phase NN step scripts use a deliberate sys.path injection pattern so that
+# `from src.*` imports resolve when the script is executed directly from
+# the repo root. The injection block must precede those imports, which
+# triggers E402 (module-level import not at top of file). The injection
+# is a documented project convention (scope §11.6, PROJECT_WORKFLOW); the
+# rule is suppressed for the affected files only.
+"scripts/phase*.py" = ["E402"]
