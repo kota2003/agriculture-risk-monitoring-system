@@ -33,6 +33,15 @@ pyproj>=3.6
 # --- Progress / UX (long SILO grid downloads) ---
 tqdm>=4.66
 
+# --- Excel reading (Phase 01 Step 07: ABS Agricultural Census 2020-21 XLSX) ---
+openpyxl>=3.1
+
+# --- Environment variables (Phase 01 Step 08: OpenWeather API key loaded from .env) ---
+python-dotenv>=1.0
+
+# --- Parquet I/O (Phase 01 Step 08: OpenWeather day_summary persistence; reused Phase 04+ for indicator panels) ---
+pyarrow>=15
+
 # --- Notebook tooling ---
 jupyter>=1.0
 ipykernel>=6.29
