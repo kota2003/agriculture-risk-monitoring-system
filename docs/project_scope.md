@@ -1,11 +1,11 @@
-# Project 5 — Project Scope (v4)
+# Project 5 — Project Scope (v5)
 
 **Repo / project codename:** `agriculture-risk-monitoring-system`
 **Formal title:** *Agriculture Risk Monitoring System: A Multi-Method Research Framework for Australian Broadacre Cropping*
 **Short title:** P5 — Agriculture Risk Monitoring System
 **Author:** Kota
-**Last updated:** 2026-05-14
-**Document status:** Pre-Phase 01 recalibration to Master-research-grade. Replaces `p5_ProjectScope_v3.md` (v3).
+**Last updated:** 2026-07-09
+**Document status:** Post-Phase 01 empirical reconciliation. Replaces `p5_ProjectScope_v4.md` (v4, 2026-05-14).
 **GitHub:** https://github.com/kota2003/agriculture-risk-monitoring-system
 
 ---
@@ -24,7 +24,7 @@ This is a **research-depth-first** portfolio project, scoped and executed to **M
 
 Its substantive contribution is a defensible, literature-grounded characterization of Australian climate–agriculture risk; its methodological contribution is a side-by-side comparison of how different families of methods quantify that risk, plus an explicit treatment of how spatial-unit choice (MAUP) affects conclusions.
 
-**Framing evolution.** The project was initially scoped (v1) as an operational monitoring system built on a single commercial weather API and rule-based scoring. During Phase 00 scoping, the framing was refined (v2) to a research-depth-first multi-method investigation. v3 reconciled the two by treating the multi-method analytical framework as the core deliverable and positioning any monitoring/dashboard layer as a communication surface for it. v4 (this document) preserves that framing but recalibrates the methodological design to Master-research-grade standards: mixed-resolution spatial design, observed-vs-derived data discipline, and explicit MAUP robustness study. The shift is recorded for honesty (no hidden pivots) and is itself a portfolio signal of scoping discipline.
+**Framing evolution.** The project was initially scoped (v1) as an operational monitoring system built on a single commercial weather API and rule-based scoring. During Phase 00 scoping, the framing was refined (v2) to a research-depth-first multi-method investigation. v3 reconciled the two by treating the multi-method analytical framework as the core deliverable and positioning any monitoring/dashboard layer as a communication surface for it. v4 preserved that framing but recalibrated the methodological design to Master-research-grade standards: mixed-resolution spatial design, observed-vs-derived data discipline, and explicit MAUP robustness study. v5 (this document) reconciles the v4 design against empirical findings from Phase 01 data acquisition. The shift is recorded for honesty (no hidden pivots) and is itself a portfolio signal of scoping discipline.
 
 It is intentionally complementary to Project 4 (panel econometrics on education and income inequality):
 
@@ -62,7 +62,7 @@ A successful execution of this scope produces a body of work consistent with a *
 3. **Climate–yield linkage.** What is the statistical relationship between climate indicators and yield outcomes — both at the mean and in the lower tail (= "risk")?
 4. **Methodological agreement and spatial-unit robustness.** Where do statistical, machine learning, and spatial–hierarchical methods agree in their risk characterizations, and where do they diverge? How robust are the conclusions to choice of spatial aggregation unit (the Modifiable Areal Unit Problem)?
 5. **Validation.** How well does each method recover known historical drought / heatwave events as high-risk? How do the project's own modelled outcomes compare to the independent ABARES farmpredict outputs (AGFD)?
-6. **Data validation (auxiliary).** How does a commercial weather API (OpenWeather) compare to the gold-standard scientific dataset (SILO) when used as the climate input layer?
+6. **Data validation (auxiliary).** How does a commercial weather API (OpenWeather) compare to the gold-standard scientific dataset (SILO) when used as the climate input layer, over the 2022–2024 sample window at the selected AAGIS region centroids?
 
 ### 2.3 Substantive contribution
 
@@ -81,6 +81,7 @@ This project does **not** claim:
 - **Coverage of irrigated, horticultural, or pastoral systems.** The project is scoped to rainfed broadacre crops (see §3.2).
 - **National-level aggregate results.** Findings are regional; aggregating to a single national risk score is explicitly out of scope.
 - **Observational status for derived datasets.** ABARES Australian Gridded Farm Data (AGFD) is the output of the ABARES farmpredict simulation model, not observed yield data. AGFD is used in this project only as an *independent validation benchmark* for our own modelled outcomes (Phase 09), never as a training target or yield substitute. Using model outputs as ground truth for other models constitutes a circularity error and is explicitly avoided.
+- **Region-total agricultural production from ABARES Farm Data Portal values.** As documented in §4.3, ABARES FDP `Value` columns are survey-weighted per-typical-farm averages, not region totals. Regional yield (t/ha) is dimensionally valid as a per-farm-representative regional average; regional area (ha) and production (t) require farm-count weighting for conversion to region totals (deferred to Phase 02).
 
 ---
 
@@ -90,17 +91,21 @@ This project does **not** claim:
 
 **Australia** is partitioned for the analysis using a **mixed-resolution spatial design** (see §3.6 for the full strategy):
 
-- **Primary yield unit: AAGIS regions** (32 regions in ASGS16 v1 vintage, of which 20 are cropping-relevant). The Australian Agricultural and Grazing Industries Survey (AAGIS), operated by ABARES, partitions Australia into a two-level hierarchy of **zones × regions**. Zones (Pastoral, Wheat Sheep, High Rainfall) are coarse climatic/agronomic divisions; regions are the finest level of geographic aggregation at which ABARES publishes broadacre commodity statistics. AAGIS regions are the canonical unit for matching the ABARES yield data; the project uses them as the primary yield unit. The ASGS16 v1 vintage contains 12 Pastoral + 12 Wheat Sheep + 8 High Rainfall = 32 regions total. **Pastoral-zone regions are excluded from the cropping analysis** since they are not broadacre-cropping environments, leaving **20 regions for Pillars 3–5 modelling** (Wheat Sheep + High Rainfall). Earlier scope estimates of "~60 regions" and the hyphenated zone names "Wheat-sheep" / "High-rainfall" were empirically corrected at Phase 01 Step 01 (2026-05-14); see PROJECT_LOG.
+- **Primary yield unit: AAGIS regions** (32 regions in the current shapefile, of which broadacre-relevant regions are the majority). The Australian Agricultural and Grazing Industries Survey (AAGIS), operated by ABARES, partitions Australia into a two-level hierarchy of **zones × regions**. Zones (Pastoral, Wheat-sheep, High-rainfall) are coarse climatic/agronomic divisions; regions (32) are the finest level of geographic aggregation at which ABARES publishes broadacre commodity statistics. AAGIS regions are the canonical unit for matching the ABARES yield data; the project uses them as the primary yield unit. Pastoral-zone regions are excluded from the cropping analysis since they are not broadacre-cropping environments.
+
+  **Empirical finding from s01 (Phase 01):** the AAGIS shapefile identifies regions by 3-digit integer codes (e.g., `'121'`, `'322'`), while the ABARES Farm Data Portal (FDP) regional CSV identifies the same regions by text names (e.g., `'NSW Riverina'`, `'QLD Western Downs and Central Highlands'`). Both encode 32 regions structurally aligned. An explicit **code-to-name mapping table** is required before spatial joins between the shapefile and FDP CSV can proceed. This mapping is a Phase 02 deliverable (§11.6, `src/processing/region_aggregation.py`).
+
+  The 3-digit code follows a hierarchical structure: 1st digit = state code (1=NSW, 2=VIC, 3=QLD, 4=SA, 5=WA, 6=TAS, 7=NT), 2nd digit = zone (Pastoral/Wheat-sheep/High Rainfall), 3rd digit = region within zone.
 
 - **Primary climate unit: SILO grid cells** (0.05° / ~5 km). Climate indicators are computed at SILO native grid resolution before any region-level aggregation, to avoid the information loss inherent in pre-aggregating temperature and rainfall data.
 
-- **Secondary unit (high-resolution disaggregation): ABS SA2** (~2,300 regions). Used only where ABS Census data is the only available source.
+- **Secondary unit (high-resolution disaggregation): ABS SA2** (~2,300 regions total; ~1,124 report agricultural activity in the 2020-21 Census). Used only where ABS Census data is the only available source.
 
 - **Robustness unit: GRDC agro-ecological zones** (~21 zones). The project's primary Pillar 3 / Pillar 4 results will be re-computed at GRDC zone aggregation as a MAUP robustness study (§5.6).
 
 State / territory aggregation will be reported descriptively only, not modeled at.
 
-**Known data-quality caveat for AAGIS shapefiles**: the official AAGIS region mapping files contain geometry errors (self-intersecting polygons, invalid ring orientations). The `read.abares` R package documents these and auto-applies `sf::st_make_valid()` on import; the Python equivalent (`shapely.make_valid()` / `gdf.geometry = gdf.geometry.make_valid()`) will be applied as a standard step in the AAGIS ingestion pipeline (Phase 01) and logged in PROJECT_LOG.
+**Known data-quality caveat for AAGIS shapefiles**: the official AAGIS region mapping files contain geometry errors (self-intersecting polygons, invalid ring orientations). The `read.abares` R package documents these and auto-applies `sf::st_make_valid()` on import; the Python equivalent (`shapely.make_valid()` / `gdf.geometry = gdf.geometry.make_valid()`) is applied as a standard step in the AAGIS ingestion pipeline (Phase 01 s01) and is logged in PROJECT_LOG.
 
 ### 3.2 Crop coverage
 
@@ -114,6 +119,8 @@ State / territory aggregation will be reported descriptively only, not modeled a
 
 **Out of scope:** horticulture, sugarcane, rice, pastoral livestock, dairy, irrigated systems beyond the optional cotton consideration.
 
+**Phase 01 empirical validation of the tier structure (s07):** ABS Census 2020-21 SA2 counts confirm the intended tier separation. Wheat is reported by 394 SA2 regions, barley by 367, and canola by 255 — validating that canola's geographic footprint is narrower and justifying its "secondary" tier assignment. The most concentrated wheat production region as of 2020-21 is the WA Central and Southern Wheat Belt, which anchors the Phase 09 comparison studies (§5.6.3).
+
 ### 3.3 Temporal
 
 **Hybrid temporal design** (different windows for different uses):
@@ -121,11 +128,11 @@ State / territory aggregation will be reported descriptively only, not modeled a
 | Use | Period | Justification |
 |---|---|---|
 | Climate climatology baseline | 1961–1990 (and 1991–2020 as alternative) | WMO standard reference periods; required for SPI/SPEI computation |
-| EVT analyses (Pillar 2) | 1961–present | Long record needed for stable extreme-tail estimation |
-| Climate–yield modeling (Pillars 3–5) | 1980–present | Modern agronomy / variety stability; pre-1980 yield data is non-comparable |
-| OpenWeather cross-validation (Pillar 6 auxiliary) | OpenWeather historical API window only | Limited by API capability |
+| EVT analyses (Pillar 2) | 1961–present for tmax/tmin/rainfall; 1970–present for evapotranspiration-derived indices | Long record needed for stable extreme-tail estimation. Evappan effective start = 1970 per SILO (s04 empirical finding). |
+| Climate–yield modeling (Pillars 3–5) | **1990–present (35 years, updated from v4's 1980+)** | ABARES Farm Data Portal historical estimates start at financial year 1990. Attempting to use pre-1990 yield data would require an alternative source with structural break considerations; the 5-year adjustment from v4's 1980 baseline is a small concession that preserves data integrity. |
+| OpenWeather cross-validation (Pillar 6 auxiliary) | **2022–2024 (3 years)** — 10 AAGIS region sample | Sample window sized for a defensible SILO–OpenWeather comparison study within cost-controlled OpenWeather One Call 3.0 usage (§4.5). |
 
-The 1961 start is a hard floor: SILO gridded data is high-quality from 1961 onward but progressively sparser before that.
+The 1961 start is a hard floor for the climatological baseline: SILO gridded data is high-quality from 1961 onward but progressively sparser before that. The 1990 start for yield modeling is a Phase 01 empirical concession (see §4.3).
 
 ### 3.4 Frequency
 
@@ -170,7 +177,7 @@ The Modifiable Areal Unit Problem (MAUP) — the phenomenon that statistical res
 
 This treatment is explicit precisely because most climate-impact studies pick one spatial unit and proceed without discussing the alternative. A Master-research-grade portfolio should make the unit choice visible and defended.
 
-**Empirical scale caveat (added post-Phase 01 Step 01).** The ASGS16 v1 vintage AAGIS shapefile contains 32 regions, of which 20 are cropping-relevant (Wheat Sheep + High Rainfall zones). The GRDC agro-ecological zone aggregation comprises ~21 zones. The two aggregations are therefore at **near-equivalent granularity** rather than the contrasting resolutions originally envisaged when this MAUP-study design was sketched. This narrows what the robustness check can reveal: it tests sensitivity to **boundary placement** under a fixed approximate scale, rather than sensitivity to **scale itself**. The check is retained because boundary-placement sensitivity is itself a published MAUP component, but the Pillar 6 write-up will frame the result honestly as such and will not over-claim scale-robustness. A true scale-MAUP study would require a coarser aggregation (e.g., state level, n=7 or 8), which is preserved as a possible Phase 09 extension if time permits.
+Additionally, Phase 01 s03 (cropping mask construction) applied three threshold values (0.05, 0.10, 0.20 fraction of grid cell classified as broadacre cropping) to test sensitivity of the mask to threshold choice. This is a related-but-smaller-scale MAUP-adjacent robustness check documented in PROJECT_LOG s03.
 
 #### 3.6.3 Information loss accounting
 
@@ -185,57 +192,97 @@ Computing climate indicators at grid resolution and then aggregating to region i
 **SILO** (Queensland Department of Agriculture and Fisheries)
 
 - **Type:** Daily gridded (~5 km / 0.05°) interpolated weather data, Australia-wide.
-- **Period:** 1889–present; project uses 1961–present.
-- **Variables planned:** maximum temperature, minimum temperature, daily rainfall, vapour pressure, evaporation, solar radiation.
-- **Access:** SILO Long Paddock data drill; gridded data available via HTTPS direct download (per-year, per-variable NetCDF) or OPeNDAP/THREDDS for subsetting.
+- **Period:** 1889–present; project uses 1961–present for tmax/tmin/rainfall/vp/rad; **1970–present for evappan** (Phase 01 s04 empirical finding: SILO evappan variable is populated from 1970 onward, sparse or absent for 1961–1969).
+- **Variables retrieved (Phase 01 s04):** maximum temperature, minimum temperature, daily rainfall, vapour pressure, solar radiation, pan evaporation.
+- **Access:** SILO Long Paddock data drill; gridded data available via HTTPS direct download (per-year, per-variable NetCDF) from AWS S3 mirror (`s3-ap-southeast-2.amazonaws.com/silo-open-data/Official/annual/`).
 - **Status:** widely used in peer-reviewed Australian climate research.
+- **Volume acquired (Phase 01 s04):** 375 masked NetCDF files, 11.64 GB total on disk after cropping-mask subsetting.
 
-**Ingestion strategy (v4 — grid-based with cropping mask).** Rather than retrieving point queries at AAGIS region centroids (the v3 approach, now retracted), the project retrieves SILO grid data for the full broadacre cropping area only:
+**Ingestion strategy (grid-based with cropping mask).** SILO grid data is retrieved for the full broadacre cropping area only:
 
 1. The ABARES ACLUMP land-use raster (§4.4) is reprojected and resampled to the SILO 0.05° grid.
 2. A binary cropping-area mask is constructed: True for grid cells whose ACLUMP class is broadacre cropping (wheat, barley, canola, mixed cereals); False elsewhere.
-3. SILO yearly NetCDF files are retrieved for the masked cells only, via either (a) OPeNDAP / THREDDS spatial subsetting if available, or (b) full-extent download with post-hoc masking before persistence.
-4. Persisted files in `data/processed/` retain xarray-compatible NetCDF format with the cropping mask applied.
+3. SILO yearly NetCDF files are retrieved for the full continental extent, with post-hoc masking applied to persist only the cropping-relevant cells.
+4. Persisted files in `data/processed/silo/` retain xarray-compatible NetCDF format with the cropping mask applied.
 
-**Volume estimate.** Australia's broadacre cropping zone covers roughly 5–10% of the continent. Masked SILO data at daily resolution × 6 variables × 65 years × ~10,000–50,000 broadacre grid cells is expected to total **~5–20 GB after compression**, vs. the ~100+ GB of the full continental grid. This is tractable for local disk and downstream processing.
+**Volume outcome (empirical).** Post-mask retention is ~11.64 GB across 6 variables × 65 years × masked grid cells, tractable for local disk and downstream processing.
 
 ### 4.2 Climate quality reference
 
 **BoM ACORN-SAT** (Bureau of Meteorology)
 
-- **Type:** Homogenised station-level long-term temperature record, ~112 stations.
+- **Type:** Homogenised station-level long-term temperature record.
+- **Nominal station count:** ~112 stations per ACORN-SAT master list.
+- **Effective station count (Phase 01 s05):** **94 stations**, after 18 stations were found unavailable at the BoM hqsites endpoint. The 18 unavailable stations are documented in `src/ingestion/bom_acornsat.py::ACORN_SAT_UNAVAILABLE_STATIONS`; three of them are broadacre-cropping-region relevant (008039 WA Wheatbelt, 008051 WA Wheatbelt margin, 073054 NSW Riverina) and this reduced ACORN-SAT coverage is a Phase 02 quality-check consideration.
+- **Files acquired:** 188 CSV files (94 stations × 2 variables: tmax and tmin).
 - **Use:** Sanity-check SILO regional aggregates against ACORN-SAT station records to confirm SILO regional means are physically plausible.
-- **Access:** BoM data portal.
+- **Access:** BoM hqsites data portal, per-station-per-variable CSV endpoints.
 
 ### 4.3 Observed agricultural production data
 
 This section deliberately uses the term **"observed"** to distinguish these sources from the **derived (model-output)** AGFD dataset described in §4.6. The distinction matters: observed yields are the only acceptable ground truth for yield modelling.
 
-**ABARES** (Australian Bureau of Agricultural and Resource Economics and Sciences)
+**ABARES Farm Data Portal (FDP), Historical Estimates** (Australian Bureau of Agricultural and Resource Economics and Sciences)
 
-- Regional commodity statistics: **observed** annual area, production, yield by AAGIS region for major crops.
-- AgSurf farm survey indicators (financial / operational, optional secondary use).
+- **Type:** Three CSVs (regional, national, state) with different schemas:
+  - `fdp-regional-historical.csv` (9.4 MB) — 150,480 rows, 32 AAGIS regions × 35 years × 136 variables
+  - `fdp-national-historical.csv` (1.5 MB) — with `Industry` dimension (7 values including `'All Broadacre'`)
+  - `fdp-state-historical.csv` (11.4 MB) — with `State` and `Industry` dimensions
+- **Period:** **1990 to 2024 (35 financial years)**, revising v4's stated "1980+" downward to the actual FDP start year.
+- **Variables:** annual area (ha), production (t), yield (t/ha) by AAGIS region for major crops, plus 130+ additional farm-management, financial, and demographic variables.
+- **Critical empirical finding from Phase 01 s06 — per-typical-farm semantics:** ABARES FDP `Value` columns represent survey-weighted per-typical-farm averages, NOT region/national totals. Triangulation from national `'All Broadacre'` wheat = 656 t/farm (2022) × ~55,000 broadacre farms ≈ 36 Mt, matching ABS published national total (~36.6 Mt), confirms per-farm semantics.
+  - **Implication for Pillars 3–5:** `yield_t_ha = production_t / area_ha` is dimensionally valid as a per-farm-representative regional yield. `production_t` and `area_ha` are per-typical-farm and require farm-count weighting for conversion to region totals. This is a Phase 02 processing task (§11.6, `src/processing/abares_aggregation.py`).
+- **AgSurf farm survey indicators:** available as additional secondary variables within FDP (financial / operational).
 
-**ABS Agricultural Census**
+**ABS Agricultural Census 2020-21** (Australian Bureau of Statistics)
 
-- 5-yearly, SA2-level. Used for region-importance weighting and structural snapshots, not as a time-series.
+- **Type:** Single-vintage cross-section, 5-yearly historically.
+- **Structural discontinuity (Phase 01 s07 empirical finding):** The 2020-21 Agricultural Census was the **final ABS Agricultural Census**. Post-2020-21, ABS transitioned to a modernised agricultural statistics pipeline (Levy Payer Register + satellite crop mapping, released annually from 2022-23). Project 5 v1.0 freezes Census-derived weighting at the 2020-21 vintage; future extensions requiring SA2 spatial unit and post-2020-21 vintage should incorporate the modernised pipeline (out of scope for v1.0).
+- **Spatial units acquired:** National + State + SA4 + SA3 + SA2 (via ASGS Edition 3), across a single `AGCDCASGS202021.xlsx` workbook (3.87 MB, ~3,700 rows in Table 1).
+- **SA2 counts by commodity (Phase 01 s07):** 394 SA2 for wheat, 367 for barley, 255 for canola.
+- **Use:** SA2-level cross-section snapshot for region-importance weighting (Pillar 4-5). Not used as time-series.
 
 ### 4.4 Land use mask (ACLUMP)
 
 **ACLUMP** (Australian Collaborative Land Use and Management Program, ABARES)
 
-- **Type:** Catchment-scale land use raster of Australia. Most recent published vintage as of 2026 to be recorded in `data/raw/manifest.yaml` at retrieval.
+- **Type:** Catchment-scale land use raster of Australia.
+- **Vintage acquired (Phase 01 s02):** `clum_50m_2023_v2` (December 2023 vintage), 286 MB TIF + 151 MB ZIP + metadata PDF.
+- **Native resolution:** 50 m; native CRS: EPSG:3577 (Australian Albers). Reprojected to SILO 0.05° grid at Phase 01 s03.
+- **Cropping coverage (Phase 01 s02 empirical):** ALUM 3.3 Cropping class = 5.131% of non-NODATA pixels.
 - **Use:** Constructing the broadacre cropping-area mask used to subset SILO grid retrieval (§4.1) and to define the spatial scope of Pillar 1–2 grid-level analyses.
 - **Access:** ABARES data portal (direct ZIP / GeoTIFF download).
 - **License:** Creative Commons (per ABARES standard data licensing).
 
 ### 4.5 Validation comparator (OpenWeather)
 
-**OpenWeather API** (Historical Weather)
+**OpenWeather One Call API 3.0** (Historical Weather, `/day_summary` endpoint)
 
-- **Type:** Commercial API, historical observation + reanalysis blend.
-- **Use:** *Validation target.* Compare OpenWeather output against SILO at a sample of AAGIS region centroids over the API's available historical window. The result is a methodological contribution in itself: how does a popular commercial API compare to the scientific gold standard?
-- **Access:** API key required; subject to rate limits and historical-window constraints.
+- **Type:** Commercial API, historical observation + reanalysis blend, daily aggregation endpoint.
+- **Purpose:** *Validation target.* Compare OpenWeather output against SILO at a sample of AAGIS region centroids over the 2022–2024 sample window (§3.3). The comparison is the methodological contribution: how does a globally-available commercial API compare to the local scientific gold standard?
+- **Sample design (Phase 01 s08):** 10 AAGIS region centroids × 1,096 days (2022-01-01 to 2024-12-31) = 10,960 daily records.
+
+  Selected regions and centroids (using `representative_point()` on the AAGIS shapefile geometry, guaranteed inside polygon):
+
+  | AAGIS code | Region name | Zone | Lat | Lon |
+  |---|---|---|---|---|
+  | 121 | NSW North West Slopes and Plains | Wheat-Sheep | -30.4927 | +149.1082 |
+  | 122 | NSW Central West | Wheat-Sheep | -32.4592 | +148.2871 |
+  | 123 | NSW Riverina | Wheat-Sheep | -34.4014 | +146.5049 |
+  | 221 | VIC Mallee | Wheat-Sheep | -35.1072 | +142.1623 |
+  | 222 | VIC Wimmera | Wheat-Sheep | -36.4753 | +141.8499 |
+  | 322 | QLD Western Downs and Central Highlands | Wheat-Sheep | -25.2380 | +149.0099 |
+  | 421 | SA Eyre Peninsula | Wheat-Sheep | -33.3796 | +136.1039 |
+  | 521 | WA Central and Southern Wheat Belt | Wheat-Sheep | -31.6075 | +117.1038 |
+  | 522 | WA Northern and Eastern Wheat Belt | Wheat-Sheep | -30.3843 | +118.2580 |
+  | 631 | TAS Tasmania | High Rainfall | -42.1424 | +146.6725 |
+
+  Geographic + climate coverage: 6 states (NSW/VIC/QLD/SA/WA/TAS), 5 climate types (semi-arid, Mediterranean, subtropical, temperate, cool-temperate). Pastoral zone and NT excluded per §3.2 broadacre scope.
+
+- **Actual data volume acquired (Phase 01 s08):** 10,960 / 10,960 daily records (100.0% coverage) persisted as 30 Parquet files (one per region-year) in `data/raw/openweather/`.
+- **Access + subscription:** One Call API 3.0 pay-per-call. First 1,000 calls/day free; £0.0012 per additional call. Daily hard limit set to 11,000 in dashboard for cost containment.
+- **Total cost (Phase 01 s08):** ~£11.40 (≈ AUD $22). API key stored in `.env` (gitignored) and loaded via `python-dotenv`.
+- **Endpoint used:** `GET https://api.openweathermap.org/data/3.0/onecall/day_summary?lat={lat}&lon={lon}&date={YYYY-MM-DD}&units=metric&appid={key}`. Returns metric-unit daily aggregations (tmin, tmax, morning/afternoon/evening/night temps, total precip, humidity, pressure, cloud cover, max wind).
 
 ### 4.6 Independent validation benchmark (AGFD)
 
@@ -251,22 +298,24 @@ This section deliberately uses the term **"observed"** to distinguish these sour
 
 ### 4.7 Licensing and attribution
 
-All sources are public or accessible via free / inexpensive API tiers. License terms will be:
+All sources are public or accessible via free / inexpensive API tiers. License terms are:
 
-- Recorded in `data/raw/manifest.yaml` per source.
+- Recorded in `data/raw/manifest.yaml` per source (populated at Phase 01 s09 closure).
 - Acknowledged in the README and `methodology.md`.
 - Respected in distribution: data files themselves are gitignored except for the manifest and small derived summaries; the project distributes scripts to retrieve data, not the data itself (consistent with playbook §5 "reproduce-from-code" default).
 
-ABARES-sourced data (AAGIS shapefile, ACLUMP, AGFD) is available under Creative Commons licensing; project will follow the ABARES citation convention at https://www.agriculture.gov.au/abares/products/citations.
+ABARES-sourced data (AAGIS shapefile, ACLUMP, AGFD, FDP) is available under Creative Commons licensing; project follows the ABARES citation convention at https://www.agriculture.gov.au/abares/products/citations.
+
+OpenWeather data is licensed for research use per OpenWeather's terms; attribution required in any derived publication.
 
 ### 4.8 Manifest plan
 
-`data/raw/manifest.yaml` will document, for each source:
+`data/raw/manifest.yaml` (populated at Phase 01 s09) documents, for each source:
 
 - Canonical name, version / vintage, retrieval URL, retrieval date
 - Field dictionary (variable names, units, encoding)
 - License and attribution
-- Known quirks (e.g., encoding issues, NA-handling requirements per playbook lesson 9, geometry-error fixes per §3.1 for AAGIS, observed-vs-derived classification per §4.6 for AGFD)
+- Known quirks (encoding issues, NA-handling requirements, geometry-error fixes, observed-vs-derived classification, per-typical-farm semantics for ABARES FDP)
 
 ---
 
@@ -283,7 +332,7 @@ Implement literature-grounded climate-extreme indicators rather than bespoke ad-
 | Indicator | Source | What it captures |
 |---|---|---|
 | **SPI** (Standardised Precipitation Index) | McKee et al. (1993); WMO | Precipitation-only drought |
-| **SPEI** (Standardised Precipitation–Evapotranspiration Index) | Vicente-Serrano et al. (2010) | Drought accounting for evaporative demand |
+| **SPEI** (Standardised Precipitation–Evapotranspiration Index) | Vicente-Serrano et al. (2010) | Drought accounting for evaporative demand (uses SILO evappan from 1970) |
 | **EHF** (Excess Heat Factor) | Nairn & Fawcett (2015); BoM operational definition | Heatwave intensity |
 | **GDD** (Growing Degree Days) | Standard agronomy | Heat accumulation for crop development |
 | **Consecutive dry days** | Standard climate-extreme literature | Drought event duration |
@@ -307,6 +356,8 @@ This pillar exists because the project frames itself around *extremes*. Failing 
 ### 5.3 Pillar 3 — Climate–Yield Statistical Models
 
 Establish associational links between climate indicators and yields at AAGIS region level (the natural unit of the yield data).
+
+**Per-farm semantics discipline (from s06 empirical finding):** ABARES FDP yield (t/ha) is used directly as the dependent variable, since per-farm yield ≈ regional-average yield under survey-weighted aggregation. Area and production variables, being per-typical-farm, are used only as covariates and never as region totals unless explicitly converted via farm-count weighting.
 
 - **Panel regression** with region and year fixed effects (continuity with Project 4 methodology).
 - **Quantile regression** at multiple quantiles (τ = 0.1, 0.25, 0.5, 0.75, 0.9). The risk-relevant findings live in the lower quantiles of yield, not the mean.
@@ -333,7 +384,7 @@ Account for spatial and hierarchical structure that standard panel methods ignor
 
 ### 5.6 Pillar 6 — Multi-Method Synthesis
 
-Cross-method comparison, with two additional dedicated robustness sub-studies.
+Cross-method comparison, with dedicated robustness and validation sub-studies.
 
 #### 5.6.1 Method-agreement analysis
 
@@ -358,7 +409,7 @@ For Phase 09 only, the project's own statistical and ML yield predictions are co
 
 #### 5.6.4 Auxiliary: OpenWeather vs SILO comparison results
 
-Presented as a methodological side-finding from Phase 02 (data quality study).
+Presented as a methodological side-finding from Phase 02 (data quality study) using the 10-region-centroid × 2022–2024 sample acquired in Phase 01 s08. Reported metrics: RMSE, bias, correlation of daily tmax/tmin/rainfall/humidity at each centroid.
 
 ---
 
@@ -371,44 +422,47 @@ Presented as a methodological side-finding from Phase 02 (data quality study).
 | # | Title | Pillar | Goal |
 |---|---|---|---|
 | 00 | Scope & Setup | — | Lock design and environment |
-| 01 | Data Acquisition (+ ACLUMP mask, grid-based SILO) | — | Reproducible ingestion of climate, agriculture, and mask data |
-| 02 | Data Quality & Cross-Validation (+ grid-vs-region consistency check) | (P1, P6 aux.) | Verify integrity; OpenWeather–SILO comparison; grid-to-region aggregation consistency |
+| 01 | Data Acquisition (8 sources) | — | Reproducible ingestion of climate, agriculture, and mask data |
+| 02 | Data Quality & Cross-Validation | (P1, P6 aux.) | Verify integrity; region code-to-name mapping; OpenWeather–SILO comparison; grid-to-region aggregation consistency |
 | 03 | Exploratory Analysis | — | Spatial-temporal patterns of climate and yields |
 | 04 | Climate Indicator Engineering (grid-level) | P1 | Compute literature-grounded indicators at SILO grid resolution |
 | 05 | Extreme Value Analysis (grid-level fit, region rollup) | P2 | EVT on climate indicators; return periods |
 | 06 | Climate–Yield Statistical Models | P3 | Panel + quantile regression linkage |
 | 07 | Machine Learning Models | P4 | ML benchmarks + SHAP |
 | 08 | Spatio-Temporal Modeling | P5 | Hierarchical / spatial structure |
-| 09 | Multi-Method Synthesis & Validation (+ MAUP study, AGFD validation) | P6 | Cross-method comparison; MAUP robustness; AGFD validation |
+| 09 | Multi-Method Synthesis & Validation | P6 | Cross-method comparison; MAUP robustness; AGFD validation |
 | 10 | Communication Layer | — | README polish, findings.md, methodology.md, optional dashboard |
 
 ### 6.2 Phase detail
 
-#### Phase 00 — Scope & Setup
+#### Phase 00 — Scope & Setup ✓ (completed 2026-05-12)
 
-- **Goal:** Lock down project design and reproducible environment.
-- **Deliverables:** `project_scope.md` (v4); `requirements.txt` + `requirements-dev.txt`; initial repo structure; initial PROJECT_LOG.md entries; PROJECT_WORKFLOW.md instantiation.
-- **Exit criterion:** Scope approved; environment reproducible.
+- Deliverables: scope v3 → v4 → v5; environment (Python 3.12, pip + venv); `.pre-commit-config.yaml`; initial `src/` utilities; PROJECT_LOG.md initialised.
+- Tag: `v0.0-phase00-complete`.
 
-#### Phase 01 — Data Acquisition
+#### Phase 01 — Data Acquisition ✓ (completed 2026-07-09)
 
-- **Goal:** Reproducible retrieval of SILO, BoM ACORN-SAT, ABARES (yields + AAGIS shapefile), ACLUMP (cropping-area raster), ABS Census, and OpenWeather data.
-- **Deliverables:**
-  - Per-source ingestion scripts in `src/ingestion/`: `silo.py`, `bom_acornsat.py`, `abares.py` (yields), `aagis_regions.py` (shapefile + geometry repair), `aclump.py` (land-use raster), `abs_census.py`, `openweather.py`.
-  - `src/processing/cropping_mask.py` — construct broadacre cropping mask at SILO resolution from ACLUMP.
-  - Populated `data/raw/`; `data/raw/manifest.yaml` with all sources entered.
-  - Phase 01 sanity-check notebook (Phase 01 ingestion summary: file counts, date ranges, mask coverage).
-- **Exit criterion:** Every source retrievable from scratch via documented script, reproducing the same files (or files matching a documented hash up to known floating-point variation). Cropping mask covers expected broadacre area.
+- Deliverables:
+  - Per-source ingestion modules in `src/ingestion/`: `aagis_regions.py`, `aclump.py`, `silo.py`, `bom_acornsat.py`, `abares.py`, `abs_census.py`, `openweather.py` (7 modules, plus `agfd.py` deferred to Phase 09).
+  - `src/processing/cropping_mask.py`, `src/processing/aagis_centroids.py`.
+  - Populated `data/raw/` and `data/processed/`; `data/raw/manifest.yaml` fully documented.
+  - 8 orchestration scripts in `scripts/phase01_s01_*.py` through `phase01_s08_*.py`.
+  - Phase 01 summary in `docs/phase_summaries/phase01_summary.md`.
+- Actual volumes acquired: SILO 11.64 GB / 375 files, ACLUMP 437 MB, BoM ACORN-SAT 188 files, ABARES FDP 22 MB / 3 CSVs, ABS Census 3.87 MB XLSX, OpenWeather 800 KB / 30 Parquet files (10,960 records). Total ~12 GB acquired.
+- Tag (planned at s09 closure): `v0.1-phase01-complete`.
 
 #### Phase 02 — Data Quality & Cross-Validation
 
-- **Goal:** Quantify and document data integrity issues; complete OpenWeather vs. SILO comparison study; verify grid-to-region aggregation consistency.
+- **Goal:** Quantify and document data integrity issues; construct AAGIS code-to-name mapping; complete OpenWeather vs. SILO comparison study; verify grid-to-region aggregation consistency; address ABARES per-typical-farm semantics.
 - **Deliverables:**
+  - **`src/processing/region_aggregation.py`** — AAGIS 3-digit code ↔ FDP text name mapping table (from Phase 01 s01/s06 empirical findings §3.1).
+  - **`src/processing/abares_aggregation.py`** — Farm-count weighting for converting per-typical-farm values to region totals where required (from Phase 01 s06 empirical finding §4.3).
   - Data quality report.
-  - OpenWeather–SILO agreement metrics (by variable, by region).
-  - **Grid-vs-region aggregate consistency check**: confirm that area-weighted means of grid-level SILO match expected regional climatologies and behave sensibly under aggregation (no obvious mask boundary artefacts, no implausible discontinuities at AAGIS region edges).
+  - OpenWeather–SILO agreement metrics using the 10-region-centroid × 2022–2024 sample (RMSE, bias, correlation).
+  - **Grid-vs-region aggregate consistency check**: confirm that area-weighted means of grid-level SILO match expected regional climatologies.
+  - ACORN-SAT coverage assessment: report the impact of the 18 unavailable stations (Phase 01 s05) on regional temperature validation.
   - Cross-validation notebook.
-- **Exit criterion:** Quality issues resolved or explicitly flagged with downstream-handling strategy; OpenWeather–SILO comparison written up as a self-contained mini-study; grid-aggregation consistency confirmed.
+- **Exit criterion:** Region code-name mapping table validated (matches all 32 AAGIS regions to their FDP name); OpenWeather–SILO comparison written up; grid-aggregation consistency confirmed; per-typical-farm ↔ region-total conversion pipeline tested.
 
 #### Phase 03 — Exploratory Analysis
 
@@ -420,7 +474,7 @@ Presented as a methodological side-finding from Phase 02 (data quality study).
 
 - **Goal:** Implement and validate literature-grounded climate extreme indicators at SILO grid resolution.
 - **Deliverables:** `src/indicators/drought.py`, `heat.py`, `frost.py`; grid-level indicator time series in `data/processed/`; region-aggregated series with within-region distributional summaries; indicator notebook with validation against published equivalents where possible.
-- **Exit criterion:** SPI, SPEI, EHF, GDD, consecutive dry days, frost days computed at grid resolution, validated, persisted, and aggregated to AAGIS region with distributional summaries.
+- **Exit criterion:** SPI, SPEI (using evappan from 1970), EHF, GDD, consecutive dry days, frost days computed at grid resolution, validated, persisted, and aggregated to AAGIS region.
 
 #### Phase 05 — Extreme Value Analysis
 
@@ -430,7 +484,7 @@ Presented as a methodological side-finding from Phase 02 (data quality study).
 
 #### Phase 06 — Climate–Yield Statistical Models
 
-- **Goal:** Establish associational climate–yield links via panel and quantile methods at AAGIS region level.
+- **Goal:** Establish associational climate–yield links via panel and quantile methods at AAGIS region level. Uses 1990–present yield data per §3.3.
 - **Deliverables:** Panel regression results; quantile regression at multiple τ; non-linear / lag specifications; robustness suite.
 - **Exit criterion:** Findings reportable with clustered SEs and appropriate caveats.
 
@@ -462,7 +516,7 @@ Presented as a methodological side-finding from Phase 02 (data quality study).
 #### Phase 10 — Communication Layer
 
 - **Goal:** Portfolio-facing deliverables.
-- **Deliverables:** Polished README; `docs/findings.md`; `docs/methodology.md`; PROJECT_LOG closing entry; v1.0 git tag; (optional) React dashboard.
+- **Deliverables:** Polished README; `docs/findings.md`; complete `docs/methodology.md` (skeleton created at Phase 01 s09); PROJECT_LOG closing entry; v1.0 git tag; (optional) React dashboard.
 - **Exit criterion:** v1.0 tag pushed to GitHub; repo passes the post-publication checks in `portfolio_finalisation_playbook.md` §14.
 
 ### 6.3 Sequencing notes
@@ -476,19 +530,22 @@ Presented as a methodological side-finding from Phase 02 (data quality study).
 
 Indicative only. The user has stated time horizon is open; quality-gating (per PROJECT_WORKFLOW §11) takes precedence over schedule.
 
-| Phase block | Indicative weeks |
-|---|---|
-| 00–02 (foundation, expanded scope) | 3–5 |
-| 03–04 (EDA + indicators) | 3–5 |
-| 05 (EVT) | 2–4 |
-| 06 (Statistical) | 3–5 |
-| 07 (ML) | 2–4 |
-| 08 (Spatio-temporal) | 2–4 |
-| 09 (synthesis + MAUP + AGFD) | 3–5 |
-| 10 (closure) | 1–2 |
-| **Total** | **19–34 weeks** (≈ 5–8.5 months) |
+| Phase block | Indicative weeks | Actual (if completed) |
+|---|---|---|
+| 00 (foundation) | 1–2 | ~2 days across 2026-05-11 → 2026-05-12 |
+| 01 (data acquisition) | 2–4 | ~2 calendar-months elapsed (2026-05-14 → 2026-07-09), ~10 effective working days |
+| 02 (quality) | 2–3 | |
+| 03 (EDA) | 1–2 | |
+| 04 (indicators) | 2–3 | |
+| 05 (EVT) | 2–4 | |
+| 06 (Statistical) | 3–5 | |
+| 07 (ML) | 2–4 | |
+| 08 (Spatio-temporal) | 2–4 | |
+| 09 (synthesis + MAUP + AGFD) | 3–5 | |
+| 10 (closure) | 1–2 | |
+| **Total remaining** | **~18–32 weeks** | |
 
-This is a working-paper-scale project. The user has explicitly accepted this scope.
+Phase 01 elapsed calendar time is longer than budgeted primarily due to a 52-day pause between s08 initial run and s08 resume (June travel/break). Effective working time within Phase 01 was ~10 days, consistent with the original 2–4 week estimate.
 
 ---
 
@@ -497,17 +554,15 @@ This is a working-paper-scale project. The user has explicitly accepted this sco
 ### 7.1 Public (committed and pushed)
 
 - `README.md` — recruiter entry point; structurally similar to Project 4 but stylistically project-specific
-- `docs/project_scope.md` — this document
-- `docs/findings.md` — substantive findings narrative
-- `docs/methodology.md` — methods and conventions reference
+- `docs/project_scope.md` — this document (v5 as of 2026-07-09)
+- `docs/findings.md` — substantive findings narrative (created at Phase 10)
+- `docs/methodology.md` — methods and conventions reference (skeleton at Phase 01 s09, expanded through Phase 10)
 - `PROJECT_LOG.md` — append-only decision log
-- `requirements.txt`, `requirements-dev.txt` — pinned dependencies (Level 3 per playbook §8)
-- `.gitignore`, `.python-version`, `LICENSE` (MIT)
+- `requirements.txt`, `requirements-dev.txt` — pinned dependencies (Level 3 per playbook §8, at v1.0)
+- `pyproject.toml` — tool configuration (black + ruff)
+- `.gitignore`, `.python-version`, `.pre-commit-config.yaml`, `.env.example`, `LICENSE` (MIT)
 - `notebooks/0X_*.ipynb` — phase-aligned notebooks, executed end-to-end
-- `src/*.py` — reusable modules including:
-  - `src/ingestion/silo.py`, `bom_acornsat.py`, `abares.py`, `aagis_regions.py`, `aclump.py`, `abs_census.py`, `openweather.py`, `agfd.py` (Phase 09)
-  - `src/processing/cropping_mask.py`, `quality_checks.py`, `region_aggregation.py`
-  - `src/indicators/`, `src/models/`, `src/viz/`
+- `src/*.py` — reusable modules
 - `scripts/phaseXX_sYY_*.py` — analytical step scripts (not log-only orchestrators)
 - `outputs/figures/*.png`, `outputs/tables/*.csv` — referenced from notebooks and README
 - `data/raw/manifest.yaml` — small, documents data sources
@@ -516,8 +571,9 @@ This is a working-paper-scale project. The user has explicitly accepted this sco
 
 - `data/raw/*` (except manifest), `data/processed/*` — large, regeneratable
 - `outputs/models/*.joblib` and similar — large, regeneratable from training scripts (playbook §7 default)
-- `docs/phase_summaries/phaseXX_summary.md` — internal handoff artefacts (PROJECT_WORKFLOW §10)
-- `__pycache__/`, `.ipynb_checkpoints/`, `.venv/`, `.env`, `.vscode/`, `.idea/`, `*.DS_Store`
+- `docs/phase_summaries/phaseXX_summary.md` — internal handoff artefacts
+- `.env` — API keys and secrets
+- `__pycache__/`, `.ipynb_checkpoints/`, `.venv/`, `.vscode/`, `.idea/`, `*.DS_Store`
 - Scratch files: `*_dump.*`, `scratch_*`, `temp_*`, `wip_*`
 
 ### 7.3 Optional (decide late)
@@ -541,15 +597,15 @@ This is a working-paper-scale project. The user has explicitly accepted this sco
 - **MAUP robustness study completed** (Pillar 3 + Pillar 4 re-computed at GRDC zone aggregation), with honest report of how conclusions change (or don't).
 - **AGFD independent validation reported** (Phase 09), with explicit observed-vs-derived discipline maintained throughout.
 - **Mixed-resolution discipline maintained**: climate indicators computed at grid resolution before any region aggregation; observed yields never replaced by AGFD model output.
-- OpenWeather–SILO comparison study completed and published (Phase 02), independently of whether downstream pillars need it.
+- OpenWeather–SILO comparison study completed and published (Phase 02), using the 10-region-centroid × 2022–2024 sample acquired in Phase 01 s08.
 
 ### 8.3 Engineering
 
 - Fresh-clone reproducibility: a recruiter / engineer can clone the repo, install pinned dependencies, and reproduce every figure and table in the deliverables.
-- All raw data is retrievable from public APIs / portals via documented scripts (no manual downloads required for the reader).
+- All raw data is retrievable from public APIs / portals via documented scripts (no manual downloads required for the reader — with the caveat that OpenWeather requires a paid One Call 3.0 subscription and API key).
 - Clean repo: no scratch files, no backup duplicates, no log-only orchestrators left behind.
 - Per-phase commit history preserved via `--no-ff` merges.
-- v1.0 annotated tag at project closure.
+- v1.0 annotated tag at project closure (v0.1-phase01-complete anchors Phase 01).
 
 ### 8.4 Portfolio
 
@@ -565,74 +621,58 @@ This is a working-paper-scale project. The user has explicitly accepted this sco
 
 **pip + venv** (CPU-only stack). conda is intentionally not used in this project.
 
-- **Python 3.12** (locked at project start to match Project 4's runtime — preserving portfolio-wide Python-version consistency — and to avoid the Project 4 lesson 5 interpreter-mismatch issue). On Windows, the project uses `py -3.12` rather than the bare `python` command to guarantee version selection even when 3.13 is the default launcher target.
-- **venv** placed at repository root as `.venv/` (relative-path-friendly for editor and pre-commit hooks)
-- **pip** with manually composed `requirements.txt` (and `requirements-dev.txt` for development-only tools)
+- **Python 3.12** (locked at project start to match Project 4's runtime — preserving portfolio-wide Python-version consistency — and to avoid the Project 4 lesson 5 interpreter-mismatch issue). On Windows, the project uses `py -3.12` rather than the bare `python` command to guarantee version selection.
+- **venv** placed at repository root as `.venv/`.
+- **pip** with manually composed `requirements.txt` (and `requirements-dev.txt` for development-only tools).
 
-**Rationale.** The project does not require GPU compute. Pillars 1–3, 5, 6 are CPU-bound by design (statistical / EVT / spatial / synthesis). Pillar 4 (XGBoost, LightGBM, RandomForest) runs on CPU within minutes given the AAGIS region × 1980+ sample size. Choosing pip+venv over conda yields a simpler, more transparent, and more recruiter-reproducible environment, at the deliberate cost of foregoing GPU acceleration for Pillar 4 and any Bayesian Pillar 5 extensions.
+**Rationale.** The project does not require GPU compute. Pillars 1–3, 5, 6 are CPU-bound by design. Pillar 4 (XGBoost, LightGBM, RandomForest) runs on CPU within minutes given the AAGIS region × 1990+ sample size. Choosing pip+venv over conda yields a simpler, more transparent, and more recruiter-reproducible environment, at the deliberate cost of foregoing GPU acceleration for Pillar 4 and any Bayesian Pillar 5 extensions.
 
-### 9.2 Core
+### 9.2 Runtime dependencies (from Phase 00 + Phase 01 first-use additions)
 
-- pandas, numpy, pyyaml, requests, pycountry (for region-coding utilities)
+Grouped by purpose in `requirements.txt`:
 
-### 9.3 Statistical / econometric
+- **Core data:** pandas>=2.2, numpy>=1.26
+- **Configuration / metadata:** pyyaml>=6.0
+- **HTTP / API ingestion:** requests>=2.31
+- **Spatial / raster (Phase 01 s01–s04 + reused Phase 04+ Phase 09):** xarray>=2024.1, netCDF4>=1.6, rasterio>=1.3, geopandas>=1.0, shapely>=2.0, pyproj>=3.6
+- **Progress / UX:** tqdm>=4.66
+- **Excel reading (Phase 01 s07):** openpyxl>=3.1
+- **Environment variables (Phase 01 s08):** python-dotenv>=1.0
+- **Parquet I/O (Phase 01 s08, reused Phase 04+):** pyarrow>=15
+- **Notebook tooling:** jupyter, ipykernel, nbformat, nbconvert
 
-- statsmodels (panel regression, GAM via statsmodels.gam)
-- linearmodels (clustered SEs, panel methods)
-- pingouin or scipy.stats (auxiliary statistical tests)
+Additional libraries added phase-by-phase per §11.7:
 
-### 9.4 Extreme value
+- Phase 03 EDA: matplotlib, seaborn
+- Phase 04 indicators: scipy
+- Phase 05 EVT: pyextremes
+- Phase 06 statistical: statsmodels, linearmodels
+- Phase 07 ML: scikit-learn, xgboost, lightgbm, shap
+- Phase 08 spatial extra: libpysal, contextily
+- Phase 09 synthesis: (no new deps; AGFD via xarray/netCDF4 already installed)
 
-- scipy.stats (GEV, GPD via genextreme, genpareto)
-- pyextremes (POT and stationarity workflows)
-- alternatively: SDFC or custom non-stationary GEV implementation
+### 9.3 Code quality (dev-only)
 
-### 9.5 Machine learning (CPU)
+Maintained in `requirements-dev.txt`:
 
-- scikit-learn, xgboost (CPU), lightgbm (CPU)
-- shap
-
-### 9.6 Spatial / raster
-
-- **xarray, netCDF4, rasterio** for grid and NetCDF handling (SILO grid, ACLUMP raster, AGFD NetCDF)
-- **geopandas, shapely, pyproj** for vector handling (AAGIS region shapefile, GRDC zones)
-- **tqdm** for download progress (SILO grid downloads can be long)
-- libpysal (Moran's I and spatial weights) — added Phase 08
-- optionally: pymc or numpyro for Bayesian hierarchical models (CPU sampling; performance considerations apply)
-
-### 9.7 Visualization
-
-- matplotlib, seaborn for static figures
-- xarray plotting for grid-level / map visualisations
-- plotly for any interactive figures
-- contextily for map basemaps (cartopy intentionally avoided due to non-pip system dependencies)
-
-### 9.8 Notebook tooling
-
-- jupyter, ipykernel, nbformat, nbconvert
-
-### 9.9 Code quality (dev-only)
-
-Maintained in `requirements-dev.txt`, not in main `requirements.txt`:
-
-- **black** — auto-formatting
+- **black** — auto-formatting, line-length 88
 - **ruff** — linting
-- **pre-commit** — git hook orchestration; `.pre-commit-config.yaml` runs black + ruff on every commit
+- **pre-commit** — git hook orchestration
 
-### 9.10 Editor integration
+`pyproject.toml` configures both:
+- `[tool.black]` line-length 88, target-version py312.
+- `[tool.ruff]` line-length 88, target-version py312.
+- `[tool.ruff.lint.per-file-ignores]` suppresses E402 for `scripts/phase*.py` (deliberate sys.path injection pattern for `from src.*` imports).
 
-- `.vscode/settings.json` committed to the repository, pinning `python.defaultInterpreterPath` to `.venv/bin/python` (or `.venv\\Scripts\\python.exe` on Windows). This prevents the Project 4 lesson 5 interpreter-mismatch issue at the repository level.
+### 9.4 Editor integration
 
-### 9.11 Optional
+- `.vscode/settings.json` committed to the repository, pinning `python.defaultInterpreterPath` to `.venv/`.
 
-- streamlit (only if dashboard is built and React is rejected)
-- React + Recharts / Mapbox / D3 (only if dashboard is built and React is selected)
+### 9.5 Reproducibility level
 
-### 9.12 Reproducibility level
+**Level 3 (pinned)** per playbook §8, at project closure (Phase 10). During Phase 01–09, `>=` constraints are used.
 
-**Level 3 (pinned)** per playbook §8. Pinning is performed at project closure (Phase 10). During development, `>=` constraints are acceptable.
-
-`requirements.txt` will be **manually composed** from actual project imports, **not generated by `pip freeze`**, to avoid Project 4 lesson 1.
+`requirements.txt` is **manually composed** from actual project imports, **not generated by `pip freeze`**, to avoid Project 4 lesson 1.
 
 ---
 
@@ -640,37 +680,46 @@ Maintained in `requirements-dev.txt`, not in main `requirements.txt`:
 
 ### 10.1 Random seeds
 
-- A project-wide seed (`SEED = 42` by convention) is set in every script that involves stochasticity.
+- A project-wide seed (`SEED = 42` by convention) is set in every script involving stochasticity.
 - ML training uses `random_state=42`; bootstrap procedures use the same seed; cross-validation splits are deterministic.
 
 ### 10.2 Manifests
 
-- `data/raw/manifest.yaml` records every data source with retrieval URL, version, retrieval date, and per-file metadata.
+- `data/raw/manifest.yaml` records every data source with retrieval URL, version, retrieval date, and per-file metadata (fully populated at Phase 01 s09).
 - New data sources require a manifest update before Phase 01 considers ingestion complete.
 
 ### 10.3 Pinned dependencies
 
-- Per §9.12.
+- Per §9.5.
 
 ### 10.4 Environment reproduction
 
-- `py -3.12 -m venv .venv` (Windows) or `python3.12 -m venv .venv` (macOS / Linux), followed by `pip install -r requirements.txt`, reproduces the runtime environment on any platform with Python 3.12 available.
-- `requirements-dev.txt` installs dev-only tools (black, ruff, pre-commit).
-- `.python-version` records the exact Python minor version for tools like pyenv.
+- `py -3.12 -m venv .venv` (Windows) or `python3.12 -m venv .venv` (macOS/Linux), followed by `pip install -r requirements.txt`, reproduces the runtime environment.
+- `requirements-dev.txt` installs dev-only tools.
+- `.python-version` records the exact Python minor version for pyenv-like tools.
+- `.env.example` documents required environment variables (currently: `OPENWEATHER_API_KEY`).
 
 ### 10.5 Determinism boundaries
 
-The project is CPU-only by design (§9.1), avoiding GPU non-determinism. Remaining determinism concerns:
+The project is CPU-only by design (§9.1), avoiding GPU non-determinism. Remaining concerns:
 
-- Multi-threaded BLAS / OpenMP execution order for some scikit-learn / XGBoost / LightGBM kernels. Where this matters for a reported result, the relevant section documents the expected variation magnitude.
-- Floating-point summation order in groupby aggregations across pandas versions. Mitigated by pinning pandas in `requirements.txt` at closure.
+- Multi-threaded BLAS / OpenMP execution order for some scikit-learn / XGBoost / LightGBM kernels.
+- Floating-point summation order in groupby aggregations across pandas versions.
+- OpenWeather API returns are deterministic per (lat, lon, date), so re-runs produce identical results modulo API availability.
 
 ### 10.6 Encoding and pandas-NA defaults
 
 Per Project 4 lessons:
 
-- All `pd.read_csv` calls use `keep_default_na=False` and explicit `na_values` for any column containing country codes, region codes, or short categorical strings (lesson 9).
-- An encoding-fallback CSV reader (`utf-8` → `cp1252` → `latin-1`) is implemented in `src/io_utils.py` from Phase 01 (lesson 8).
+- All `pd.read_csv` calls use `keep_default_na=False` and explicit `na_values` for country / region / short categorical columns.
+- Encoding-fallback CSV reader (`utf-8` → `cp1252` → `latin-1`) implemented in `src/io_utils.py`.
+- ABS Census (s07) additionally handles ABS-specific NA strings: `..`, `np`, `-`, `nil`.
+
+### 10.7 Session persistence
+
+- Data is persisted as: NetCDF (SILO, cropping mask), GeoPackage (AAGIS repaired), CSV (BoM, ABARES, ABS), Parquet (OpenWeather).
+- All persistence uses atomic write-and-rename (`.part` → final path) to prevent partial-file corruption on interruption.
+- Every ingestion module is idempotent: re-running skips already-completed items (per-file, per-record, or per-year depending on source).
 
 ---
 
@@ -700,28 +749,39 @@ Per PROJECT_WORKFLOW §11.3:
 
 - Append-only.
 - Mid-file edits performed via one-off Python script (PROJECT_WORKFLOW §8.2), never by hand.
-- Entry on every material design decision (data source change, method choice, override, etc.).
+- Entry on every material design decision (data source change, method choice, override, empirical finding, etc.).
+- Sensitive credentials (API keys) never logged in cleartext; masked format only (e.g., `061dc7…9e58`).
 
 ### 11.5 Adaptive override convention
 
 Per Project 4 precedent: when a step plan must change mid-execution, the override is logged as a discrete PROJECT_LOG entry referencing the original plan and the rationale for change. This is an explicit honesty signal in the audit trail, not a deviation to hide.
 
+Examples from Phase 01:
+- s04 SILO evappan variable found to be effectively populated only from 1970 (not the 1961 baseline for other variables) — logged as empirical finding in PROJECT_LOG s04 entry.
+- s06 ABARES per-typical-farm semantics discovered via triangulation — logged with numeric verification in PROJECT_LOG s06 entry.
+- s08 HTTP 504 permanent skip during 2026-05-18 initial run, subsequently auto-recovered during 2026-07-09 resume — logged in PROJECT_LOG s08 entry.
+
 ### 11.6 `src/` promotion rule
 
 Per PROJECT_WORKFLOW §6.2: a function moves from `scripts/` to `src/` when it is called more than once or is non-trivial and likely reusable. Reviewed at each phase boundary.
 
+Phase 02 promotion candidates identified in Phase 01:
+- **`src/processing/region_aggregation.py`** — AAGIS 3-digit code ↔ FDP text name mapping (from s01/s06 findings).
+- **`src/processing/abares_aggregation.py`** — Per-typical-farm ↔ region-total farm-count weighting (from s06 finding).
+
 ### 11.7 Code quality tooling
 
-- **black** for auto-formatting (line length default 88), enforced on every commit.
-- **ruff** for linting; minimum rule set is the ruff default plus pandas-vet and numpy plugins; rule additions logged in PROJECT_LOG.
-- **pre-commit** orchestrates both via `.pre-commit-config.yaml`; installed locally via `pre-commit install` after env setup.
-- Dev-only tools live in `requirements-dev.txt`, not `requirements.txt`, so the runtime dependency surface stays minimal.
+- **black** for auto-formatting (line length 88), enforced on every commit.
+- **ruff** for linting; default rule set (E, F).
+- **pre-commit** orchestrates both via `.pre-commit-config.yaml`.
+- **`pyproject.toml`** centralises tool configuration and per-file-ignore (E402 suppression for `scripts/phase*.py` sys.path injection pattern).
+- Dev-only tools in `requirements-dev.txt`.
+
+**First-use rule (§9.2):** new runtime library additions to `requirements.txt` are staged in the same commit as the code that introduces them. Phase 01 additions: `openpyxl` (s07), `python-dotenv` (s08), `pyarrow` (s08).
 
 ### 11.8 Editor configuration
 
-- `.vscode/settings.json` is committed to the repository.
-- `python.defaultInterpreterPath` is set to a relative path inside `.venv/` so the correct Python is auto-selected when the repo is opened.
-- This is a structural fix for Project 4 lesson 5 (interpreter mismatch). Personal user preferences (themes, keybindings) do **not** belong in this file; only project-correctness settings.
+- `.vscode/settings.json` committed, pins interpreter to `.venv/`.
 
 ### 11.9 Notebook discipline
 
@@ -732,13 +792,20 @@ Per PROJECT_WORKFLOW §6.2: a function moves from `scripts/` to `src/` when it i
 
 ### 11.10 Knowledge management (Claude side)
 
-At each phase boundary, recommend Knowledge updates to the user (PROJECT_WORKFLOW §9.2). Aim for ~5 files in Knowledge:
+At each phase boundary, recommend Knowledge updates to the user. Aim for ~5 files:
 
 1. `PROJECT_WORKFLOW.md`
 2. `portfolio_finalisation_playbook.md`
-3. `project_scope.md` (this file)
+3. `project_scope.md` (this file, v5)
 4. The most recent phase summary (rolling)
-5. Latest `findings.md` and `methodology.md` once they exist
+5. Latest `findings.md` and `methodology.md` skeleton once they exist
+
+### 11.11 Secrets management
+
+- API keys and other credentials live only in `.env` (gitignored).
+- `.env.example` provides a template (tracked) documenting required variables.
+- `python-dotenv` loads `.env` in scripts that need credentials.
+- API keys are never printed in cleartext to logs; only masked format.
 
 ---
 
@@ -747,42 +814,48 @@ At each phase boundary, recommend Knowledge updates to the user (PROJECT_WORKFLO
 ### 12.1 Methodological
 
 - **MAUP exposure.** Different spatial aggregation choices can produce different statistical conclusions. *Mitigation:* mixed-resolution design (§3.6); explicit GRDC-zone robustness study in Pillar 6 (§5.6.2).
-- **AAGIS region climate-boundary non-alignment.** AAGIS regions are drawn for agricultural-statistics sampling purposes, not by climate criteria. Within-region climate heterogeneity is therefore expected. *Mitigation:* grid-level indicator computation preserves within-region heterogeneity; within-region distributional summaries (not just means) are reported.
+- **AAGIS region climate-boundary non-alignment.** AAGIS regions are drawn for agricultural-statistics sampling purposes, not by climate criteria. Within-region climate heterogeneity is therefore expected. *Mitigation:* grid-level indicator computation preserves within-region heterogeneity; within-region distributional summaries reported.
 - **Quantile regression at extreme quantiles** (τ = 0.05, 0.95) is unstable with small samples. Use τ ∈ [0.1, 0.9] as defaults; report tail estimates as exploratory.
-- **Non-stationary EVT** trend detection has notoriously low statistical power. Report effect sizes alongside hypothesis tests; do not over-interpret marginal significance.
-- **Spatial models** require a defensible spatial weights matrix; arbitrary choices can drive results. Multiple weight specifications will be tested.
-- **ML overfitting risk** to weather × region interactions. Spatial blocked CV is the primary defense; performance gap between spatial CV and naive CV is itself a reportable diagnostic.
+- **Non-stationary EVT** trend detection has notoriously low statistical power. Report effect sizes alongside hypothesis tests.
+- **Spatial models** require a defensible spatial weights matrix; multiple weight specifications will be tested.
+- **ML overfitting risk** to weather × region interactions. Spatial blocked CV is the primary defense.
 
 ### 12.2 Data
 
-- **Observed-vs-derived data discipline.** AGFD is model output, not observation. Using it as a training target or yield substitute is a circularity error and is explicitly forbidden in this project (§4.6, §2.5).
-- **OpenWeather historical window** may be too short for some validation goals; the OpenWeather–SILO comparison may be confined to recent years only.
-- **ABARES regional yield data** has known structural breaks (region boundary changes). Document and either harmonize or restrict analysis to stable-boundary periods.
-- **SILO interpolation quality** degrades in remote / station-sparse regions (e.g., far-western pastoral zones). Project's restriction to broadacre cropping mitigates this since cropping zones have denser station coverage, but the issue is acknowledged.
-- **Pre-1980 yield data** is non-comparable; restricting yield-linkage analysis to 1980+ is a deliberate concession.
-- **AAGIS shapefile geometry errors** are known and repaired via `shapely.make_valid()` (§3.1). Repair step is logged in PROJECT_LOG.
+- **Observed-vs-derived data discipline.** AGFD is model output, not observation. Using it as a training target is explicitly forbidden (§4.6, §2.5).
+- **ABARES FDP per-typical-farm semantics.** Region totals cannot be inferred without farm-count weighting; regional yield (t/ha) remains valid (§4.3, §5.3).
+- **ABS Census 2020-21 is the final Census.** Post-2020-21 ABS agricultural statistics use a modernised pipeline (Levy Payer Register + satellite crop mapping) which is not incorporated in v1.0 (§4.3, §13).
+- **ACORN-SAT 18 stations unavailable.** Reduces the reference-station network relevant to Phase 02 quality checks; three stations of broadacre-relevance are affected (§4.2).
+- **AAGIS region code ↔ name mismatch** between shapefile and FDP CSV. Requires explicit mapping table (Phase 02 §11.6).
+- **OpenWeather sample window (2022–2024)** limits statistical power of the SILO comparison to a 3-year seasonal cycle. Sample is nonetheless sufficient for the auxiliary methodological finding claimed in §5.6.4.
+- **SILO interpolation quality** degrades in station-sparse regions. The project's restriction to broadacre cropping mitigates this since cropping zones have denser station coverage.
+- **SILO evappan variable** effectively populated from 1970 onward. SPEI (which uses evappan) is therefore restricted to 1970+ (§3.3, §5.1).
+- **Pre-1990 yield data non-comparability** restricts yield-linkage analysis to 1990+ (§3.3, §4.3).
+- **AAGIS shapefile geometry errors** are known and repaired via `shapely.make_valid()` at ingest time (§3.1).
 
 ### 12.3 Engineering
 
-- **SILO data volume**. With cropping-mask subsetting, expected to be ~5–20 GB compressed (vs. ~100+ GB full continental grid). Tractable for local disk.
-- **Compute limits** for hierarchical Bayesian models. Mitigation: start with frequentist multilevel models (statsmodels / pymer4); escalate to Bayesian only if needed.
-- **Memory / chat handoffs**. Mitigation: PROJECT_WORKFLOW §10 phase summary protocol; expect 2–3 chat handoffs within larger phases.
+- **SILO data volume**. Post-mask ~11.64 GB. Tractable for local disk.
+- **Compute limits** for hierarchical Bayesian models. Mitigation: start with frequentist multilevel models; escalate to Bayesian only if needed.
+- **Memory / chat handoffs**. Mitigation: PROJECT_WORKFLOW phase summary protocol.
+- **OpenWeather API cost containment**. Daily hard limit set to 11,000 in dashboard; script enforces a soft daily quota. Phase 01 actual cost ~£11.40 (well within budget).
 
 ### 12.4 Scope
 
-- **Crop coverage scope drift**. Adding sorghum / cotton mid-project is tempting but methodologically expensive (irrigation regime differs). Defer to Phase 03 decision (§3.2).
-- **Dashboard scope drift**. Decision is deferred (§7.3). Resist mid-project React build-out unless it directly serves communicating findings.
+- **Crop coverage scope drift**. Adding sorghum / cotton mid-project is methodologically expensive (irrigation regime differs). Defer to Phase 03 decision (§3.2).
+- **Dashboard scope drift**. Decision deferred (§7.3). Resist mid-project React build-out unless directly serves communicating findings.
 
 ---
 
 ## 13. Flexibility Clause
 
-This Scope reflects current best understanding as of 2026-05-14. It is expected — and welcome — that some elements will need revision as the project encounters reality:
+This Scope reflects current best understanding as of 2026-07-09. It is expected — and welcome — that some elements will need revision as the project encounters reality:
 
 - **Substantive findings may redirect emphasis.** If Phase 03 EDA reveals that a particular crop or region exhibits the cleanest signal, downstream phases may concentrate there.
 - **Methodological choices may change.** If Phase 06 finds that quantile regression is unstable at the available sample sizes, alternative tail-modeling approaches will be considered.
-- **Phases may split or merge.** If a phase grows too large for one chat, it is split per PROJECT_WORKFLOW §9.3. If two phases naturally converge, they may be merged with a PROJECT_LOG entry recording the change.
+- **Phases may split or merge.** If a phase grows too large for one chat, it is split per PROJECT_WORKFLOW §9.3.
 - **Optional pillars / crops / deliverables** (Pillar 5 spatial, optional crops, dashboard) are explicitly subject to deferral or omission with logged rationale.
+- **Post-Census statistics.** Future extensions requiring post-2020-21 agricultural statistics at SA2 spatial unit should incorporate the ABS modernised pipeline (Levy Payer Register + satellite crop mapping). Not in v1.0 scope.
 
 What is **not** flexible:
 
@@ -791,11 +864,11 @@ What is **not** flexible:
 - The reproducibility and engineering standards.
 - The honesty conventions (no hidden overrides, explicit non-claims, calibrated uncertainty).
 
-Revisions to this Scope are versioned (`p5_ProjectScope_v5.md`, etc.) with a PROJECT_LOG entry summarizing the change.
+Revisions to this Scope are versioned (`p5_ProjectScope_v6.md`, etc.) with a PROJECT_LOG entry summarizing the change.
 
 ---
 
-## Appendix A — Initial Repo Structure (updated for v4)
+## Appendix A — Repo Structure (post-Phase 01)
 
 ```
 agriculture-risk-monitoring-system/
@@ -804,20 +877,33 @@ agriculture-risk-monitoring-system/
 ├── PROJECT_LOG.md
 ├── requirements.txt
 ├── requirements-dev.txt
+├── pyproject.toml
 ├── .python-version
 ├── .gitignore
 ├── .pre-commit-config.yaml
+├── .env.example        # template; .env is gitignored
 ├── LICENSE
 │
 ├── .vscode/
-│   └── settings.json        # committed; pins interpreter to .venv
+│   └── settings.json
 │
 ├── data/
 │   ├── raw/
-│   │   ├── .gitkeep
-│   │   └── manifest.yaml
+│   │   ├── manifest.yaml
+│   │   ├── aagis_regions/       # gitignored contents; shapefile
+│   │   ├── aclump/              # gitignored; land-use raster
+│   │   ├── silo/                # gitignored; ~11.64 GB NetCDF
+│   │   ├── acorn_sat/           # gitignored; 188 CSVs
+│   │   ├── abares/              # gitignored; 3 FDP CSVs
+│   │   ├── abs_census/          # gitignored; AGCDCASGS202021.xlsx
+│   │   └── openweather/         # gitignored; 30 Parquet
 │   └── processed/
-│       └── .gitkeep
+│       ├── aagis_regions_repaired.gpkg
+│       ├── cropping_mask.nc
+│       ├── silo/                # masked NetCDFs
+│       ├── bom_acornsat/        # processed station data
+│       ├── abares/              # commodity CSVs (wheat/barley/canola)
+│       └── abs_census/          # SA2 commodity CSVs
 │
 ├── notebooks/
 │   ├── 02_data_quality.ipynb
@@ -836,38 +922,46 @@ agriculture-risk-monitoring-system/
 │   ├── log_utils.py
 │   ├── ingestion/
 │   │   ├── __init__.py
+│   │   ├── aagis_regions.py
+│   │   ├── aclump.py
 │   │   ├── silo.py
 │   │   ├── bom_acornsat.py
-│   │   ├── abares.py            # yields
-│   │   ├── aagis_regions.py     # shapefile + geometry repair
-│   │   ├── aclump.py            # land-use raster (cropping mask source)
+│   │   ├── abares.py
 │   │   ├── abs_census.py
 │   │   ├── openweather.py
-│   │   └── agfd.py              # Phase 09 validation benchmark
+│   │   └── agfd.py              # Phase 09 addition
 │   ├── processing/
 │   │   ├── __init__.py
-│   │   ├── quality_checks.py
-│   │   ├── cropping_mask.py     # constructs broadacre mask at SILO resolution
-│   │   └── region_aggregation.py
+│   │   ├── cropping_mask.py
+│   │   ├── aagis_centroids.py
+│   │   ├── region_aggregation.py   # Phase 02 addition
+│   │   └── abares_aggregation.py   # Phase 02 addition
 │   ├── indicators/
 │   │   ├── __init__.py
-│   │   ├── drought.py
-│   │   ├── heat.py
-│   │   └── frost.py
+│   │   ├── drought.py           # Phase 04
+│   │   ├── heat.py              # Phase 04
+│   │   └── frost.py             # Phase 04
 │   ├── models/
 │   │   ├── __init__.py
-│   │   ├── evt.py
-│   │   ├── statistical.py
-│   │   ├── ml.py
-│   │   └── spatial.py
+│   │   ├── evt.py               # Phase 05
+│   │   ├── statistical.py       # Phase 06
+│   │   ├── ml.py                # Phase 07
+│   │   └── spatial.py           # Phase 08
 │   └── viz/
 │       ├── __init__.py
 │       └── maps.py
 │
 ├── scripts/
 │   ├── phase00_s01_bootstrap_repo.py
-│   ├── phase01_s01_*.py
-│   ├── (...)
+│   ├── phase01_s01_init_manifest_and_fetch_aagis.py
+│   ├── phase01_s02_init_aclump.py
+│   ├── phase01_s03_build_cropping_mask.py
+│   ├── phase01_s04_ingest_silo.py
+│   ├── phase01_s05_ingest_bom_acornsat.py
+│   ├── phase01_s06_ingest_abares.py
+│   ├── phase01_s07_ingest_abs_census.py
+│   ├── phase01_s08_ingest_openweather.py
+│   ├── (phase02+ scripts to be added)
 │   └── update_readme.py
 │
 ├── outputs/
@@ -879,10 +973,13 @@ agriculture-risk-monitoring-system/
 │       └── .gitkeep
 │
 └── docs/
-    ├── project_scope.md
-    ├── findings.md          # populated in Phase 10
-    ├── methodology.md       # populated in Phase 10
-    └── phase_summaries/     # gitignored
+    ├── project_scope.md      # this document (v5)
+    ├── findings.md           # Phase 10
+    ├── methodology.md        # skeleton at Phase 01 s09, expanded through Phase 10
+    └── phase_summaries/      # gitignored
+        ├── phase00_summary.md
+        ├── phase01_kickoff_prompt.md
+        ├── phase01_summary.md
         └── .gitkeep
 ```
 
@@ -893,11 +990,13 @@ agriculture-risk-monitoring-system/
 Per `portfolio_finalisation_playbook.md`:
 
 - Branch per phase: `phase-XX-<short-topic>`; merge to `main` with `--no-ff`.
-- Commit format: `[Phase XX - Step YY] <imperative verb phrase>`.
-- Closure: annotated tag `v1.0` on the final-phase merge commit.
-- Tag message: `"Project 5 closed YYYY-MM-DD - Agriculture Risk Monitoring System: A Multi-Method Research Framework for Australian Broadacre Cropping"`.
-- Polish commits post-v1.0 use prefix `Portfolio polish:` or `Docs:` or `Cleanup:`.
-- Substantive post-closure revisions bump to `v1.1` with PROJECT_LOG entry.
+- Commit format: `[Phase XX - Step YY] <imperative verb phrase>` or `[Phase XX s01-sNN] <summary>` for consolidated commits.
+- Closure: annotated tag `vX.Y-phaseNN-complete` on each phase merge; `v1.0` at final closure.
+- Tag messages document phase deliverables.
+- Polish commits post-vX.Y use prefix `Portfolio polish:`, `Docs:`, or `Cleanup:`.
+- Substantive post-closure revisions bump to next patch version.
+
+Phase 01 tag: `v0.1-phase01-complete` (annotated, on the merge commit into `main`).
 
 ---
 
@@ -905,11 +1004,12 @@ Per `portfolio_finalisation_playbook.md`:
 
 | Version | Date | Change |
 |---|---|---|
-| v1 | 2026 (pre-finalisation) | Initial draft (`p5_ProjectScope.md`); operational framing, OpenWeather + FAOSTAT + ABS, 5-phase plan |
-| v2 | 2026-05-09 | Research-depth framing; SILO/BoM/ABARES primary with OpenWeather as validation; ABARES regions; broadacre tiered scope; 1961+/1980+ hybrid temporal design; six methodological pillars; 11-phase plan; full reproducibility / engineering conventions |
-| v3 | 2026-05-11 | (a) Formal title and codename aligned with GitHub repo; framing reconciled as research framework that can power a monitoring layer. (b) Tech stack switched from conda hybrid to pip + venv, CPU-only; GPU support intentionally dropped. (c) Code quality tooling (black + ruff + pre-commit) and committed `.vscode/settings.json` added to conventions. (d) Repo structure, document history, and tag-message convention updated to match. (e) Python version corrected from 3.11 → **3.12** to match Project 4's runtime and preserve portfolio-wide consistency |
-| v4 | 2026-05-14 | This document. Pre-Phase 01 recalibration to Master-research-grade. Key substantive changes: (a) New §3.6 Spatial Resolution Strategy with mixed-resolution pillar-to-unit mapping and explicit MAUP commitment. (b) §4.1 SILO ingestion rewritten — grid-based subsetting with ACLUMP cropping mask, replacing v3 point-centroid strategy. (c) New §4.4 ACLUMP land-use mask as primary data source. (d) New §4.6 AGFD as Phase 09 independent validation benchmark, with explicit observed-vs-derived discipline. (e) §5.1, §5.2 clarified — climate indicators and EVT at grid resolution with region rollup. (f) §5.6 expanded — MAUP robustness study (GRDC zone re-aggregation) + AGFD validation added to Pillar 6. (g) §3.1 — AAGIS region formally named, zone×region hierarchy documented, geometry-error caveat. (h) §6 phase plan — Phase 01 acquires ACLUMP mask; Phase 02 adds grid-vs-region consistency check; Phase 09 ingests AGFD and runs MAUP study. (i) §9 tech stack — xarray, netCDF4, rasterio, tqdm added. (j) §12 risks — AAGIS climate-boundary non-alignment and observed-vs-derived discipline explicitly acknowledged. |
+| v1 | 2026 (pre-finalisation) | Initial draft; operational framing, OpenWeather + FAOSTAT + ABS, 5-phase plan |
+| v2 | 2026-05-09 | Research-depth framing; SILO/BoM/ABARES primary with OpenWeather as validation; ABARES regions; broadacre tiered scope; 1961+/1980+ hybrid temporal design; six methodological pillars; 11-phase plan |
+| v3 | 2026-05-11 | Formal title and codename aligned with GitHub repo; tech stack switched from conda hybrid to pip + venv, CPU-only; GPU support dropped; code quality tooling added; Python 3.11 → 3.12 to match Project 4 |
+| v4 | 2026-05-14 | Pre-Phase 01 recalibration to Master-research-grade. Mixed-resolution spatial strategy (§3.6); grid-based SILO ingestion with ACLUMP cropping mask (§4.1, §4.4); AGFD as Phase 09 independent validation with observed-vs-derived discipline (§4.6, §2.5); MAUP robustness study (§5.6.2); AAGIS region formally named as primary yield unit (§3.1); xarray/netCDF4/rasterio added to stack |
+| **v5** | **2026-07-09** | **Post-Phase 01 empirical reconciliation.** 7 findings from Phase 01 data acquisition reflected across the document: (a) §3.1, §11.6 AAGIS 3-digit code ↔ FDP text name mismatch documented; Phase 02 mapping table task defined. (b) §4.3, §5.3, §11.6 ABARES FDP per-typical-farm semantics documented; Phase 02 farm-count-weighting task defined. (c) §3.3, §4.3 yield-modeling period 1980 → 1990 (ABARES FDP earliest year). (d) §4.3, §13 ABS Ag Census 2020-21 = final Census; post-2020-21 requires modernised pipeline (out of v1.0 scope). (e) §4.2, §12.2 ACORN-SAT 18 stations unavailable; effective count = 94. (f) §4.1, §3.3, §5.1 SILO evappan effective from 1970; SPEI restricted to 1970+. (g) §4.5, §5.6.4 OpenWeather 10-region selection concretised with lat/lon centroids; 2022–2024 sample; 100% coverage acquired; total cost £11.40. Additional structural updates: §6.2 Phase 00 and Phase 01 marked complete with actual volumes; §9.2 runtime dependency list updated with openpyxl / python-dotenv / pyarrow; §11.7 first-use rule reiterated; §11.11 secrets management section added; Appendix A repo structure updated to reflect post-Phase 01 state; Appendix B Phase 01 tag documented. |
 
 ---
 
-*End of Project Scope v4.*
+*End of Project Scope v5.*

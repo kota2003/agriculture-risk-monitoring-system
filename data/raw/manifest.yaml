@@ -1,178 +1,701 @@
 project:
   name: agriculture-risk-monitoring-system
-  scope_version: v4
+  scope_version: v5
   manifest_schema_version: '1.0'
   description: Data source registry for Project 5. Each entry under 'sources' records canonical
-    name, publisher, role, license, vintage, observed-vs-derived classification (per scope
-    v4 section 4.6), known quirks, and per-pillar usage. Updated by ingestion scripts at retrieval
-    time.
-  last_updated: '2026-05-13T15:31:02.006826+00:00'
+    provenance (retrieval URL, date, retriever), storage layout, semantic schema, known quirks,
+    license, and per-file verification metadata.
+  policy:
+    reproducibility: Level 2 during Phases 01-09; Level 3 (pinned metadata) at v1.0.
+    updates: New sources are appended to 'sources'. Substantive edits to existing entries increment
+      the entry's revision.
+    determinism: Data files are gitignored; this manifest is committed so the repository documents
+      how to reproduce them.
+
+data_dirs:
+  raw: data/raw
+  processed: data/processed
+
 sources:
-  aagis_regions:
-    canonical_name: Australian Agricultural and Grazing Industries Survey (AAGIS) Region Mapping
-      Files
-    publisher: Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES),
-      Department of Agriculture, Fisheries and Forestry (DAFF)
-    role: Primary yield spatial unit per scope v4 section 3.1. AAGIS regions are the finest
-      level of geographic aggregation at which ABARES publishes broadacre commodity statistics.
-      Used as the natural unit for Pillars 3, 4, 5, 6.
-    access:
-      portal_url: https://www.agriculture.gov.au/abares/research-topics/surveys/farm-survey-data
-      resolved_url: https://www.agriculture.gov.au/sites/default/files/documents/aagis_asgs16v1_g5a.shp_.zip
-      file_size_compressed_mb: 2.6
-      method: manual_browser_url_capture_then_https_get
-    vintage:
-      published_date: '2020-08-04'
-      published_date_source: Last-Modified HTTP header at 2026-05-14 retrieval
-      page_last_updated: '2024-09-09'
-      retrieved_date: '2026-05-13T15:31:02.001614+00:00'
-      retrieved_by: scripts/phase01_s01_init_manifest_and_fetch_aagis.py
-      expected_content_length_bytes: 2637311
-      etag_at_first_ingest: '"5f28c824-283dff"'
-      asgs_alignment: ASGS 2016
-      version_string: asgs16v1_g5a
-    license:
-      type: Creative Commons
-      attribution_required: true
-      citation_url: https://www.agriculture.gov.au/abares/products/citations
-    classification:
-      observed_or_derived: observed
-      pillar_use:
-      - P3 primary unit (statistical climate-yield models)
-      - P4 primary unit (ML models)
-      - P5 primary unit (spatio-temporal models)
-      - P6 primary unit (multi-method synthesis)
-    field_dictionary:
-      pending_first_ingest: false
-      region_count: 32
-      zones_present:
-      - High Rainfall
-      - Pastoral
-      - Wheat Sheep
-      crs: EPSG:4283
-      bounding_box_xyxy:
-      - 112.92112402285545
-      - -43.7404804229736
-      - 153.63859748840332
-      - -9.142306014410913
-      geometry_repair_log:
-        invalid_before: 2
-        invalid_after: 0
+
+  - key: aagis_regions
+    name: ABARES AAGIS regions (shapefile)
+    provider: Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES)
+    phase_added: '01'
+    role_in_project: Primary spatial unit for AAGIS-level yield modelling and cross-method risk
+      comparison (Pillars 3, 4, 5, 6).
+    retrieval:
+      method: HTTPS direct download
+      url: https://www.agriculture.gov.au/sites/default/files/documents/aagis_asgs16v1_g5a.shp_.zip
+      retrieval_date: '2026-05-13'
+      retriever: scripts/phase01_s01_init_manifest_and_fetch_aagis.py + src/ingestion/aagis_regions.py
+    format: ESRI shapefile bundle (.shp + .shx + .dbf + .prj + .cpg) inside a ZIP.
+    spatial_unit: AAGIS region (matches the Regional level of the ABARES Farm Data Portal).
+    crs_upstream: EPSG:4283 (GDA94; recorded in .prj as GCS_GDA_1994)
+    crs_stored: EPSG:4326 (WGS84) after Phase 01 reprojection; EPSG:4283 preserved in raw zip.
+    n_features: 32
+    n_features_note: 'ABARES has published two different AAGIS region counts across contexts: the
+      shapefile aagis_asgs16v1_g5a contains 32 regions (verified empirically 2026-05-13). Some
+      ABARES text descriptions cite ~60. The 32-region shapefile count is authoritative for spatial
+      operations; the ~60 count refers to older / aggregated groupings not represented in the current
+      shapefile.'
+    paths:
+      raw: data/raw/aagis_regions/aagis_asgs16v1_g5a.shp_.zip
+      raw_gitignored: true
+      processed: data/processed/aagis_regions_repaired.gpkg (WGS84; geometry validity fixed via
+        shapely.make_valid).
+    data_dictionary:
+      - field: AAGIS
+        type: integer
+        description: 3-digit AAGIS region code (1st digit = state, 2nd = zone, 3rd = region within
+          zone).
+      - field: AAGISzone
+        type: string
+        description: Zone label (Pastoral / Wheat-Sheep / High Rainfall). Broadacre cropping is
+          concentrated in the Wheat-Sheep and High Rainfall zones; Pastoral regions are excluded
+          from the cropping analysis.
+      - field: STE_NAME21
+        type: string
+        description: 'State/Territory long name (e.g., ''New South Wales'').'
+      - field: STATE
+        type: string
+        description: State/Territory abbreviation.
+      - field: geometry
+        type: Polygon / MultiPolygon
+        description: Region boundary. Some polygons ship with self-intersecting rings or invalid
+          orientation and require repair before spatial joins.
     known_quirks:
-    - id: geometry_errors
-      description: Self-intersecting polygons and invalid ring orientations in source shapefile,
-        documented by the read.abares R package (which auto-applies sf::st_make_valid on import).
-      mitigation: GeoSeries.make_valid() (vectorized via shapely 2.x) applied during ingestion in src/ingestion/aagis_regions.py::repair_aagis_geometries.
-      reference: scope v4 section 3.1; PROJECT_LOG entry 2026-05-14
-    persisted_paths:
-      raw: data/raw/aagis_regions/
-      processed: data/processed/aagis_regions_repaired.gpkg
-    notes:
-    - 'AAGIS uses two-level hierarchy: zones (Pastoral, Wheat Sheep, High Rainfall) x regions. ASGS16 v1 vintage contains 32 regions: 12 Pastoral, 12 Wheat Sheep, 8 High Rainfall. Scope v4 section 3.1 originally estimated "~60 regions" and used hyphenated zone names; both corrected empirically at s01 first run 2026-05-14.'
-    - Pastoral-zone regions are excluded from the cropping analysis per scope v4 section 3.1. Cropping-relevant subset = 20 regions (12 Wheat Sheep + 8 High Rainfall).
-    - 'class column (3-digit integer) appears to encode state x zone x region: first digit = state (1=NSW, 2=VIC, 3=QLD, 4=SA, 5=WA, 6=TAS, 7=NT), second digit = zone (1=Pastoral, 2=Wheat Sheep, 3=High Rainfall), third digit = region index within state x zone. Empirical pattern confirmed against all 32 codes; to be formally verified in Phase 03 EDA.'
-    - 'MAUP-study scale note: cropping AAGIS regions (n=20) and GRDC agro-ecological zones (n~21) are at near-equivalent aggregation granularity, not contrasting resolutions as scope v4 section 5.6.2 implicitly assumes. This narrows the MAUP-study interpretive yield. Decision: retain GRDC re-aggregation as robustness check, but caveat the framing in Pillar 6 write-up. Logged in PROJECT_LOG 2026-05-14.'
-  aclump:
-    canonical_name: "Catchment Scale Land Use of Australia"
-    short_name: "ACLUMP CLUM"
-    version: "Update December 2023, version 2"
-    publisher: "ABARES (Australian Bureau of Agricultural and Resource Economics and Sciences)"
-    role: "Land use raster - source of broadacre cropping mask"
+      - 'Known geometry-validity issues in the source shapefile. The `read.abares` R package
+        documents these and auto-applies `sf::st_make_valid()` on import; the Python ingestion
+        pipeline applies `shapely.make_valid()` at the same step and verifies validity before
+        writing the processed GeoPackage.'
+      - 'Filename ships with a trailing underscore before the .zip extension (`.shp_.zip`). This is
+        an ABARES convention, not a filesystem quirk.'
+      - 'Region code semantics are hierarchical (state / zone / region-within-zone). Downstream
+        code should never string-slice codes; use AAGISzone or an explicit lookup instead.'
+      - 'Region-key mismatch vs ABARES Farm Data Portal: shapefile identifies regions by 3-digit
+        integer codes (e.g. 121); the FDP regional CSV identifies the same regions by text names
+        (e.g. NSW Riverina). Both have 32 regions, structurally aligned. Explicit code-to-name
+        mapping table required for downstream spatial joins; deferred to Phase 02 (scope v5 §11.6,
+        src/processing/region_aggregation.py). Empirical finding: phase01 s06.'
+    license: Creative Commons Attribution 4.0 International (CC BY 4.0)
+    attribution: 'Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES),
+      Australian Agricultural and Grazing Industries Survey — AAGIS regions.'
+    citation: 'Australian Bureau of Agricultural and Resource Economics and Sciences. AAGIS regions
+      shapefile (aagis_asgs16v1_g5a). Canberra: ABARES; accessed 2026-05-13.'
+    renewal_or_versioning: 'ABARES occasionally reissues AAGIS geometries when ASGS statistical
+      boundaries update. Refresh policy: check ABARES page at each new scope version; no automatic
+      refresh.'
+    verification_check:
+      spatial_bounds_wgs84:
+        min_lon: 112.9
+        max_lon: 154.0
+        min_lat: -43.7
+        max_lat: -10.6
+      expected_n_features: 32
+      n_broadacre_regions_estimated_note: 'Broadacre cropping is concentrated in the Wheat-Sheep
+        zone and higher-rainfall subset of the High Rainfall zone; the exact usable-region count for
+        Pillars 3-4 will be finalised in Phase 03 EDA after examining data density per region.'
 
-    access:
-      raster_zip_url: "https://www.agriculture.gov.au/sites/default/files/documents/clum_50m_2023_v2.zip"
-      metadata_docx_url: "https://www.agriculture.gov.au/sites/default/files/documents/CLUM_DescriptiveMetadata_December2023_v2.docx"
-      method: "HTTPS direct download (no auth)"
-      content_length_bytes: 158077503    # 150.7 MB; PDF page says 126 MB (stale)
-      content_type: "application/zip"
-
-    vintage:
-      first_published: "2024-02-26"
-      revised: "2024-06-27"                 # version 2 release (minor WA + TAS fixes)
-      etag: '"667cf4a9-96c123f"'             # captured via DevTools 2026-05-14
-      last_modified_http: "Thu, 27 Jun 2024 05:12:09 GMT"
-      retrieved: null                        # filled at runtime by phase01_s02 script
-
-    license:
-      type: "CC BY 4.0"
-      doi: "10.25814/2w2p-ph98"
-      citation: >-
-        ABARES 2024, Catchment Scale Land Use of Australia - Update
-        December 2023 version 2, Australian Bureau of Agricultural and
-        Resource Economics and Sciences, Canberra, June, CC BY 4.0,
-        DOI: 10.25814/2w2p-ph98.
-
-    classification:
-      observed_or_derived: "observed"        # state vector mapping rasterised
-      pillar_use:
-        - "Phase 01 sec. 4.4 (cropping mask source)"
-        - "scope v4 sec. 3.6.1 (spatial subsetting only)"
-      excluded_uses:
-        - "NEVER used as feature input to P3-P4 yield models"
-        - "NEVER used as a yield surrogate"
-
-    raster_properties:
-      filename_in_zip: "clum_50m_2023_v2.tif"
-      crs: "EPSG:3577"                       # GDA94 / Australian Albers, metres
-      resolution_metres: 50
-      dtype: "int16"
-      pixel_value_meaning: "Three-digit ALUM 8 code (hundreds=primary, tens=secondary, units=tertiary)"
-      bounding_box_albers:
-        north: -1047650
-        south: -4847000
-        east:  21220000
-        west:  -1888000
-
-    alum_classification:
-      version: 8
-      reference: "Table A1 of CLUM_DescriptiveMetadata_December2023_v2.docx"
-      broadacre_cropping_codes:  [330, 331, 332, 333, 334, 335, 336, 337, 338]   # 3.3 Cropping
-      excluded_irrigated_codes:  [430, 431, 432, 433, 434, 435, 436, 437, 438, 439]   # 4.3 Irrigated cropping
-      excluded_transition_codes: [360, 361, 362, 363, 364, 365]   # 3.6 Land in transition
-
+  - key: aclump
+    name: ACLUMP catchment-scale land use raster (v2, 50 m)
+    provider: Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES),
+      Australian Collaborative Land Use and Management Program.
+    phase_added: '01'
+    role_in_project: Source of the broadacre cropping-area mask (scope v5 §4.4) that constrains
+      SILO grid ingestion (§4.1) and defines the spatial scope of Pillar 1-2 grid-level analyses.
+    retrieval:
+      method: HTTPS direct download
+      url: https://www.agriculture.gov.au/sites/default/files/documents/clum_50m_2023_v2.zip
+      retrieval_date: '2026-05-14'
+      retriever: scripts/phase01_s02_init_aclump.py + src/ingestion/aclump.py
+    format: Single-band GeoTIFF inside a ZIP, with descriptive metadata PDF.
+    spatial_unit: 50 m raster cell (native).
+    crs_upstream: EPSG:3577 (GDA94 / Australian Albers).
+    crs_stored: EPSG:3577 in raw. Reprojection to SILO 0.05° WGS84 grid performed in s03 for mask
+      construction; reprojected raster is not persisted (only the derived mask is).
+    n_features: null
+    n_features_note: 'Raster, not vector — cell counts rather than feature counts. ALUM class 3.3
+      "Cropping" occupies 5.131% of non-NODATA pixels across the continental raster (verified
+      empirically 2026-05-14, phase01 s02).'
+    paths:
+      raw: data/raw/aclump/
+      raw_gitignored: true
+      processed: data/processed/cropping_mask.nc (derived at phase01 s03).
+    data_dictionary:
+      - field: band_1
+        type: integer
+        description: ALUM classification code per CLUM_DescriptiveMetadata_December2023.pdf. Broad
+          class 3.3 = Cropping (broadacre); target class for the cropping mask.
     known_quirks:
-      state_vintage_variance: >-
-        Source state vintages range 2012 (ACT) to 2022 (NT). For broadacre
-        core regions: NSW = 2017 v1.5, WA = 2018, VIC = 2021, SA = 2017,
-        TAS = 2021. Acceptable as a static cropping footprint under
-        scope v4 sec. 3.3 modern-agronomy framing (1980+ yield window
-        tolerates 5-10 yr cropping-extent stationarity assumption).
-      wa_visual_attribution: >-
-        In WA, ALUM 4.0.0 / 5.0.0 / 6.0.0 attributed to secondary level
-        by visual interpretation using satellite data. Does NOT affect
-        3.3 Cropping broadacre mask (handled in original vector layer).
-      sa_adelaide_voids: >-
-        Adelaide NODATA voids filled from ABS 2021 mesh blocks. Mapped
-        only to residential / services / pasture mosaic classes, never
-        to 3.3 Cropping. Does NOT affect broadacre mask.
-      nodata_focal_filled: >-
-        Remaining NODATA voids elsewhere filled via ArcGIS focal
-        statistics (nearest-neighbour-like). Minor mask precision
-        degradation expected in voids; broadacre regions have dense
-        original coverage, impact small.
-      raster_size_advertised_vs_actual: >-
-        ABARES page advertises ZIP size as 126 MB; HTTP Content-Length
-        is 158,077,503 bytes (150.7 MB). HTTP header is authoritative;
-        page text is stale rounding from initial 2024-02 release.
+      - 'Vintage acquired: clum_50m_2023_v2 (December 2023).'
+      - 'Native CRS differs from SILO grid CRS. Reprojection from EPSG:3577 (Albers, metric) to
+        EPSG:4326 (WGS84, degrees) at 0.05° resolution is applied at s03 before mask construction
+        via rasterio.warp.'
+      - 'Cropping-mask threshold sensitivity study performed at s03 with three thresholds (0.05,
+        0.10, 0.20 fraction of SILO 0.05° grid cell classified as broadacre cropping in ACLUMP).
+        Primary threshold selected: 0.05 (t005), most permissive, captures broadacre boundary well.
+        Alternate thresholds (t010, t020) persisted for Phase 02 sensitivity analysis.'
+    license: Creative Commons Attribution 4.0 International (CC BY 4.0)
+    attribution: 'ABARES — Australian Collaborative Land Use and Management Program (ACLUMP),
+      catchment-scale land use of Australia (December 2023 v2 release).'
+    citation: 'ABARES. Catchment-scale land use of Australia — Update December 2023 (v2). Canberra:
+      ABARES; accessed 2026-05-14.'
+    renewal_or_versioning: 'ABARES updates catchment-scale land use approximately every 1-2 years.
+      Project 5 v1.0 uses the 2023 v2 release; refresh discretionary at future scope versions.'
+    verification_check:
+      raw_file_size_tif_mb_approx: 286
+      raw_file_size_zip_mb_approx: 151
+      cropping_class_fraction_of_non_nodata: 0.05131
+      mask_n_true_cells_at_t005: 28721
 
-    persisted_paths:
-      raw_zip:           "data/raw/aclump/clum_50m_2023_v2.zip"
-      raw_tif:           "data/raw/aclump/clum_50m_2023_v2.tif"
-      metadata_docx:     "data/raw/aclump/CLUM_DescriptiveMetadata_December2023_v2.docx"
-      processed_mask:    "data/processed/cropping_mask.nc"   # produced by s03
+  - key: silo
+    name: SILO daily gridded climate data (Long Paddock)
+    provider: Queensland Department of Environment, Science and Innovation (formerly DAF) — SILO /
+      Long Paddock.
+    phase_added: '01'
+    role_in_project: Primary daily climate input (scope v5 §4.1). Grid-level climate indicators
+      (Pillar 1) and EVT tail estimation (Pillar 2) computed at SILO native resolution before any
+      region-level aggregation.
+    retrieval:
+      method: HTTPS direct download from AWS S3 mirror (per-year, per-variable NetCDF).
+      url_pattern: https://s3-ap-southeast-2.amazonaws.com/silo-open-data/Official/annual/<variable>/<year>.<variable>.nc
+      retrieval_date: '2026-05-15'
+      retriever: scripts/phase01_s04_ingest_silo.py + src/ingestion/silo.py
+    format: NetCDF4 (xarray-compatible), one file per (variable, year).
+    spatial_unit: 0.05° × 0.05° (~5 km) grid cell on WGS84.
+    crs_upstream: EPSG:4326 (WGS84)
+    crs_stored: EPSG:4326 (WGS84)
+    n_features: null
+    n_features_note: 'Gridded data (not vector). 375 masked NetCDF files persisted after cropping-
+      mask application at phase01 s03 (t005 threshold, 28,721 True cells).'
+    paths:
+      raw: data/raw/silo/<variable>/<year>.nc (transient, cleared post-mask-application)
+      raw_gitignored: true
+      processed: data/processed/silo/<variable>/<year>.nc (with cropping mask applied)
+    data_dictionary:
+      - field: max_temp
+        type: float32
+        unit: '°C'
+        description: Daily maximum air temperature at ~2m; SILO variable code max_temp.
+        period_years: [1961, 2024]
+      - field: min_temp
+        type: float32
+        unit: '°C'
+        description: Daily minimum air temperature at ~2m; SILO variable code min_temp.
+        period_years: [1961, 2024]
+      - field: daily_rain
+        type: float32
+        unit: mm
+        description: Daily accumulated rainfall; SILO variable code daily_rain.
+        period_years: [1961, 2024]
+      - field: vp
+        type: float32
+        unit: hPa
+        description: Vapour pressure; SILO variable code vp. Used for humidity-based derivations.
+        period_years: [1961, 2024]
+      - field: radiation
+        type: float32
+        unit: MJ/m²/day
+        description: Daily solar radiation; SILO variable code radiation.
+        period_years: [1961, 2024]
+      - field: evap_pan
+        type: float32
+        unit: mm
+        description: Daily pan evaporation; SILO variable code evap_pan. Used as input to SPEI
+          calculation in Pillar 1.
+        period_years: [1970, 2024]
+        note: 'Effective start = 1970 (empirical finding, phase01 s04). Pre-1970 files are
+          structurally sparse or absent at continental extent.'
+    known_quirks:
+      - 'evap_pan effective start = 1970, not 1961 like other variables. Retrieval attempts for
+        1961-1969 returned structurally sparse or absent files. Downstream consequence: SPEI
+        computation (which uses evap_pan) is constrained to 1970+ per scope v5 §3.3, §4.1, §5.1.
+        9 pre-1970 evap_pan attempts are explicitly skipped and logged. Empirical finding:
+        phase01 s04.'
+      - 'Post-mask storage discipline. Raw continental NetCDFs (~30 MB × 375 files) are large. To
+        limit disk pressure, the ingestion module applies the cropping mask on the fly and does not
+        retain the un-masked raw files after mask application confirms success. Final on-disk
+        volume post-mask: ~11.64 GB.'
+      - 'File naming convention: `<year>.<variable>.nc` — year first, then variable. Different from
+        some other climate datasets where the order is reversed.'
+    license: Creative Commons Attribution 4.0 (per Long Paddock terms).
+    attribution: 'Data from the Long Paddock SILO drill, Queensland Government, Australia.'
+    citation: 'Queensland Department of Environment, Science and Innovation. SILO gridded daily
+      climate data. Long Paddock; accessed 2026-05-15.'
+    renewal_or_versioning: 'SILO is updated daily; project uses annual per-variable NetCDFs frozen
+      at the 2026-05-15 retrieval snapshot. Re-retrieval at each scope version if time coverage
+      needs to be extended.'
+    verification_check:
+      n_files_persisted: 375
+      total_size_gb_approx: 11.64
+      variables_count: 6
 
-    out_of_scope_artefacts:
-      # The ZIP also contains these; we don't extract or use them in s02.
-      - "Layer files (.lyrx / .lyr / .qml) for ArcGIS / QGIS visualisation"
-      - "scale_date_update.zip (nested): date_clum_2023.tif, scale_clum_2023.tif, updates_clum_2023.tif"
-      # If sanity checks fail in s03, scale_date_update.zip becomes
-      # diagnostic material; until then it's left compressed for provenance.
+  - key: bom_acornsat
+    name: BoM ACORN-SAT homogenised station temperature (94 stations, tmin + tmax)
+    provider: Australian Bureau of Meteorology (BoM)
+    phase_added: '01'
+    role_in_project: Homogenised station-level temperature reference (scope v5 §4.2). Cross-validates
+      SILO regional aggregates against direct station observations in Phase 02.
+    retrieval:
+      method: HTTPS direct download (master list + per-station-per-variable CSVs).
+      station_list_url: https://www.bom.gov.au/climate/change/acorn-sat/map/stations-acorn-sat.txt
+      per_station_url_pattern: https://www.bom.gov.au/climate/change/hqsites/data/temp/<variable>.<6-digit-id>.daily.csv
+      retrieval_date: '2026-05-16'
+      retriever: scripts/phase01_s05_ingest_bom_acornsat.py + src/ingestion/bom_acornsat.py
+    format: Per-station CSV, one per (variable, station).
+    spatial_unit: Point station (lat/lon in the master list).
+    crs_upstream: EPSG:4326 (WGS84)
+    crs_stored: EPSG:4326 (WGS84)
+    n_features: 94
+    n_features_note: '112 stations nominal per the ACORN-SAT master list; 18 permanently unavailable
+      at the BoM hqsites endpoint (all zero-padding variants return HTTP 404). Effective count = 94.
+      Empirical finding: phase01 s05.'
+    paths:
+      raw: data/raw/acorn_sat/station_list.csv
+      raw_gitignored: true
+      processed: data/processed/bom_acornsat/<variable>/<station_id>_daily.csv
+    data_dictionary:
+      - field: stn_num
+        type: integer
+        description: 6-digit BoM station number. Master list uses `stn_num`; the raw served CSV
+          historically also used `stnnum`. A synonym-map at load time normalises to `stn_num`.
+      - field: stn_name
+        type: string
+        description: Station name.
+      - field: lat
+        type: float
+        description: Latitude (WGS84).
+      - field: lon
+        type: float
+        description: Longitude (WGS84).
+      - field: elevation
+        type: float
+        description: Elevation (m).
+      - field: start
+        type: string YYYY-MM-DD
+        description: Record start date.
+      - field: (per-station CSV) date
+        type: string YYYY-MM-DD
+        description: Observation date.
+      - field: (per-station CSV) tmax OR tmin
+        type: float
+        unit: '°C'
+        description: Homogenised daily temperature value; variable indicated by the file name.
+    known_quirks:
+      - '18 stations unavailable at BoM hqsites endpoint (empirical finding, phase01 s05). Station
+        IDs: 002012, 005026, 008039, 008051, 009510, 009741, 010579, 017031, 023090, 030045, 046037,
+        046043, 059040, 060139, 066062, 073054, 086071, 094010. Encoded as
+        ACORN_SAT_UNAVAILABLE_STATIONS frozenset in src/ingestion/bom_acornsat.py. 3 of the 18 are
+        broadacre-region relevant: 008039 WA Wheatbelt, 008051 WA Wheatbelt margin, 073054 NSW
+        Riverina. Phase 02 will assess coverage impact on regional SILO validation.'
+      - 'Column-name synonyms in the served station list (`stn_num` vs `stnnum`). Synonym-map
+        applied at load time in `src/ingestion/bom_acornsat.py::_CANONICAL_COLUMNS`.'
+      - 'lxml dependency avoided. Initial implementation used pandas.read_html on the master list
+        page, which required lxml. Replaced with direct CSV endpoint retrieval.'
+    license: Creative Commons Attribution 3.0 Australia (BoM standard).
+    attribution: 'Bureau of Meteorology, Commonwealth of Australia. ACORN-SAT homogenised
+      temperature record.'
+    citation: 'Bureau of Meteorology. Australian Climate Observations Reference Network — Surface
+      Air Temperature (ACORN-SAT). Melbourne: Bureau of Meteorology; accessed 2026-05-16.'
+    renewal_or_versioning: 'BoM periodically updates ACORN-SAT with methodology revisions
+      (typically annual). Project 5 v1.0 uses the 2026-05-16 snapshot.'
+    verification_check:
+      n_stations_nominal: 112
+      n_stations_effective: 94
+      n_files_persisted: 188
+      n_files_note: 94 stations × 2 variables (tmax, tmin) = 188 CSVs.
 
-    related_dataset_not_retrieved:
-      catchment_scale_land_use_commodities:
-        reason: "Out of scope per s02 decision 4 (PROJECT_LOG 2026-05-14)"
-        revisit_condition: "s03 cropping mask sanity check failure"
-      date_and_scale_shapefile:
-        size_mb: 398
-        reason: "Not required for cropping mask construction"
-        revisit_condition: "Spatial pattern in s03 mask quality issues suggests vintage-driven cause"
+  - key: abares
+    name: ABARES Farm Data Portal — Historical Estimates (Regional, National, State)
+    provider: Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES)
+    phase_added: '01'
+    role_in_project: Primary observed-yield dataset at AAGIS region level (scope v5 §4.3).
+      Dependent variable for Pillars 3-5 climate-yield modelling.
+    retrieval:
+      method: HTTPS direct download (three separate CSVs).
+      urls:
+        - https://www.agriculture.gov.au/sites/default/files/documents/fdp-regional-historical.csv
+        - https://www.agriculture.gov.au/sites/default/files/documents/fdp-national-historical.csv
+        - https://www.agriculture.gov.au/sites/default/files/documents/fdp-state-historical.csv
+      retrieval_date: '2026-05-17'
+      retriever: scripts/phase01_s06_ingest_abares.py + src/ingestion/abares.py
+    format: Long-form CSVs (three levels with distinct schemas).
+    spatial_unit: AAGIS region (regional CSV); Australia (national CSV); State/Territory (state CSV).
+    crs_upstream: n/a (tabular, no geometry)
+    crs_stored: n/a
+    n_features: 32
+    n_features_note: '32 AAGIS regions × 35 financial years × 136 variables = 150,480 rows in the
+      regional CSV (empirical: phase01 s06). Same 32 regions as the shapefile — but keyed by text
+      name rather than 3-digit code; see known_quirks.'
+    paths:
+      raw: data/raw/abares/{fdp-regional-historical,fdp-national-historical,fdp-state-historical}.csv
+      raw_gitignored: true
+      processed: data/processed/abares/{wheat,barley,canola}.csv
+    data_dictionary:
+      - field: Variable
+        type: string
+        description: 'Free-text label including unit, e.g. "Wheat area sown (ha)".'
+      - field: Year
+        type: integer
+        description: ABARES financial year ending year (1989-90 → 1990). Range 1990–2024.
+      - field: '"ABARES region" (regional CSV only)'
+        type: string
+        description: 'Text region name (e.g., "NSW Riverina"). Distinct from the shapefile''s
+          3-digit code convention.'
+      - field: State (state CSV only)
+        type: string
+        description: State/Territory name.
+      - field: Industry (national + state CSVs)
+        type: string
+        description: '7 values: All Broadacre, Beef, Cropping, Dairy, Mixed, Sheep, Sheep-Beef.
+          Not present in the regional CSV.'
+      - field: Value
+        type: float
+        description: 'CRITICAL: survey-weighted per-typical-farm average, NOT region/national
+          total. See known_quirks.'
+      - field: RSE
+        type: float
+        description: Relative Standard Error (%). May be blank; preserve as NA (Project 4 lesson).
+    known_quirks:
+      - 'CRITICAL — per-typical-farm semantics. FDP Value columns represent survey-weighted per-
+        typical-farm averages, NOT region/national totals. Verified empirically: National
+        Industry="All Broadacre" wheat 2022 = 656 t/farm; 656 × ~55,000 broadacre farms ≈ 36 Mt ≈
+        ABS national wheat total. Implication: `yield_t_ha = production_t / area_ha` is
+        dimensionally valid as per-farm-representative regional yield; `production_t` and `area_ha`
+        require farm-count weighting for conversion to region totals. Phase 02 task: implement
+        src/processing/abares_aggregation.py (scope v5 §11.6). Empirical finding: phase01 s06.'
+      - 'Three distinct CSV schemas (regional / national / state). Regional lacks Industry
+        dimension; national has Industry; state has both State and Industry. Handled via per-level
+        upstream_columns + rename maps in FDP_FILES dict of src/ingestion/abares.py.'
+      - 'Region-key naming mismatch vs AAGIS shapefile. Shapefile uses 3-digit codes (e.g. 121);
+        FDP CSV uses text names (e.g. "NSW Central West"). Both encode 32 aligned regions; explicit
+        mapping table required for spatial join. Deferred to Phase 02 (src/processing/
+        region_aggregation.py per scope v5 §11.6). Empirical finding: phase01 s06.'
+      - 'Year range 1990-2024. Scope v4 originally specified "1980+" for yield modelling; ABARES
+        FDP earliest year is 1990. Scope v5 §3.3 updated accordingly.'
+    license: Creative Commons Attribution 4.0 International (CC BY 4.0)
+    attribution: 'Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES),
+      Farm Data Portal — Historical Estimates (Regional, National, State).'
+    citation: 'Australian Bureau of Agricultural and Resource Economics and Sciences. Farm Data
+      Portal Historical Estimates. Canberra: ABARES; accessed 2026-05-17.'
+    renewal_or_versioning: 'ABARES FDP is refreshed with each ABARES farm survey update
+      (approximately annual). Project 5 v1.0 uses the 2026-05-17 retrieval snapshot.'
+    verification_check:
+      regional_csv_rows: 150480
+      n_regions: 32
+      n_years: 35
+      n_variables_distinct: 136
+      commodity_files_generated:
+        - wheat.csv (1114 rows, 747 non-NA yields)
+        - barley.csv (1114 rows, 738 non-NA yields)
+        - canola.csv (1114 rows, 482 non-NA yields)
+
+  - key: abs_census
+    name: ABS Agricultural Commodities, Australia — 2020-21 financial year (ASGS Edition 3)
+    provider: Australian Bureau of Statistics (ABS)
+    phase_added: '01'
+    role_in_project: SA2-level cross-section for Pillar 4-5 region-importance weighting (scope v5
+      §4.3). Not used as time-series. Structural anchor.
+    retrieval:
+      method: HTTPS direct download
+      url: https://www.abs.gov.au/statistics/industry/agriculture/agricultural-commodities-australia/2020-21/AGCDCASGS202021.xlsx
+      retrieval_date: '2026-05-17'
+      retriever: scripts/phase01_s07_ingest_abs_census.py + src/ingestion/abs_census.py
+    format: Single XLSX workbook (2 sheets - Contents metadata + Table 1 data).
+    spatial_unit: ASGS Edition 3 regions (National + State + SA4 + SA3 + SA2).
+    crs_upstream: n/a (tabular, region codes only)
+    crs_stored: n/a
+    n_features: 1124
+    n_features_note: '1,124 SA2 regions report agricultural activity in 2020-21. Additional
+      hierarchy levels (National, State, SA4, SA3) also present in the same table, keyed by digit-
+      count of the Region code.'
+    paths:
+      raw: data/raw/abs_census/AGCDCASGS202021.xlsx
+      raw_gitignored: true
+      processed: data/processed/abs_census/{wheat,barley,canola}_{sa2,national_state}.csv
+    data_dictionary:
+      - field: Region code
+        type: integer as string
+        description: '0 = Australia; 1 digit = State; 3 digits = SA4; 5 digits = SA3; 9 digits =
+          SA2. Region-level classification via digit count.'
+      - field: Region label
+        type: string
+        description: Region name.
+      - field: Commodity code
+        type: string
+        description: 'ABS commodity code, e.g. AGCEREAL_AHAWHT_F (wheat area), AGCEREAL_ATOWHT_F
+          (wheat production), WHEAT_YIELD_F (wheat yield), AGOTHCROP_AHACAN_F (canola area).'
+      - field: Commodity description
+        type: string
+        description: Human-readable label.
+      - field: Estimate
+        type: float
+        description: Point estimate for the commodity-variable at the region.
+      - field: Estimate - Relative Standard Error (Percent)
+        type: float
+        description: Relative Standard Error of the estimate.
+      - field: Number of agricultural businesses
+        type: float
+        description: Count of agricultural businesses reporting the commodity.
+      - field: Number of agricultural businesses - Relative Standard Error (Percent)
+        type: float
+        description: RSE of the business count.
+    known_quirks:
+      - 'STRUCTURAL — 2020-21 was the FINAL ABS Agricultural Census. Per ABS publication
+        (2022-07-26): "The 2020-21 Agricultural Census was the last Agricultural Census to be
+        conducted by the ABS." Post-2020-21 statistics use the modernised pipeline (Levy Payer
+        Register + satellite crop mapping), out of Project 5 v1.0 scope. Scope v5 §4.3, §13
+        document this constraint. Empirical finding: phase01 s07.'
+      - 'Column names ship with surrounding whitespace (e.g. " Estimate " with leading/trailing
+        spaces). Not visible in Excel due to alignment. Normalised via
+        `raw.columns = [str(c).strip() for c in raw.columns]` in src/ingestion/abs_census.py.'
+      - 'Canola classified under AGOTHCROP prefix, not AGOILSEED. ABS classifies canola as
+        "Other crops - Oilseeds - Canola" with codes AGOTHCROP_AHACAN_F (area), AGOTHCROP_ATOCAN_F
+        (production). Yield has its own namespace: CANOLA_YIELD_F. Initial script guessed
+        AGOILSEED_* prefix and failed; corrected via runtime code discovery.'
+      - 'Header row is row 7 (0-indexed 6). Rows 1-6 = workbook metadata; row 7 = column headers;
+        rows 8+ = data. Handled via `header=6` in pd.read_excel.'
+      - 'ABS NA conventions: "..", "np", "-", "nil". Handled via na_values parameter.'
+      - 'SA2 counts by commodity (empirical): wheat 394, barley 367, canola 255. Confirms scope
+        v5 §3.2 tier structure (wheat > barley > canola in geographic footprint).'
+    license: Creative Commons Attribution 4.0 International (ABS default).
+    attribution: 'Australian Bureau of Statistics (ABS). Agricultural Commodities, Australia
+      2020-21 (ASGS Edition 3 regions).'
+    citation: 'Australian Bureau of Statistics. Agricultural Commodities, Australia — 2020-21
+      financial year. Canberra: ABS; accessed 2026-05-17.'
+    renewal_or_versioning: 'STRUCTURAL — no further ABS Agricultural Census releases planned.
+      Project 5 v1.0 freezes the weighting at this 2020-21 vintage.'
+    verification_check:
+      raw_file_size_mb: 3.87
+      wheat_national_yield_t_ha: 2.52
+      wheat_national_yield_t_ha_note: 'WHEAT_YIELD_F national = 2.52 t/ha (expected 2.5, +0.80% diff
+        — screenshot rounding artefact). Sanity check passed.'
+      barley_national_yield_t_ha: 2.67
+      barley_national_yield_t_ha_note: 'BARLEY_YIELD_F national = 2.67 t/ha (expected 2.7, -1.11%
+        diff). Sanity check passed.'
+
+  - key: openweather
+    name: OpenWeather One Call API 3.0 — Historical Weather Data (day_summary endpoint)
+    provider: OpenWeather Ltd (UK)
+    phase_added: '01'
+    role_in_project: Validation comparator only (scope v5 §4.5). Compare against SILO at 10 AAGIS
+      region centroids for the OpenWeather-SILO methodological comparison study (Phase 02, §5.6.4).
+      NEVER a training input for Pillars 3-4.
+    retrieval:
+      method: HTTPS REST API (One Call 3.0 day_summary endpoint), one call per (region, date).
+      url_pattern: https://api.openweathermap.org/data/3.0/onecall/day_summary?lat={lat}&lon={lon}&date={YYYY-MM-DD}&units=metric&appid={key}
+      retrieval_date_range: ['2026-05-18', '2026-07-09']
+      retriever: scripts/phase01_s08_ingest_openweather.py + src/ingestion/openweather.py +
+        src/processing/aagis_centroids.py
+    format: Parquet (pyarrow engine), one file per (region, year).
+    spatial_unit: Point query at AAGIS region centroid (`shapely.geometry.representative_point()`).
+    crs_upstream: EPSG:4326 (WGS84)
+    crs_stored: EPSG:4326 (WGS84)
+    n_features: 10
+    n_features_note: '10 sampled AAGIS region centroids × 1,096 days (2022-01-01 to 2024-12-31) =
+      10,960 daily records target. 10,960 / 10,960 (100.0%) acquired. Empirical: phase01 s08.'
+    paths:
+      raw: data/raw/openweather/<region_code>_<year>.parquet
+      raw_gitignored: true
+      processed: (none at Phase 01; Phase 02 will produce OpenWeather-SILO agreement metrics
+        derived tables.)
+    data_dictionary:
+      - field: date
+        type: string YYYY-MM-DD
+        description: UTC date of the day_summary aggregation.
+      - field: region_code
+        type: string
+        description: AAGIS 3-digit region code.
+      - field: lat
+        type: float64
+        description: Query latitude (WGS84).
+      - field: lon
+        type: float64
+        description: Query longitude (WGS84).
+      - field: tz
+        type: string
+        description: IANA timezone identifier at the query location.
+      - field: tmin_c
+        type: float64
+        unit: '°C'
+        description: Daily minimum temperature.
+      - field: tmax_c
+        type: float64
+        unit: '°C'
+        description: Daily maximum temperature.
+      - field: t_morning_c
+        type: float64
+        unit: '°C'
+        description: Temperature at ~06:00 local time.
+      - field: t_afternoon_c
+        type: float64
+        unit: '°C'
+        description: Temperature at ~12:00 local time.
+      - field: t_evening_c
+        type: float64
+        unit: '°C'
+        description: Temperature at ~18:00 local time.
+      - field: t_night_c
+        type: float64
+        unit: '°C'
+        description: Temperature at ~00:00 local time.
+      - field: precip_mm
+        type: float64
+        unit: mm
+        description: Total daily precipitation.
+      - field: humidity_pct
+        type: float64
+        unit: '%'
+        description: Afternoon relative humidity.
+      - field: pressure_hpa
+        type: float64
+        unit: hPa
+        description: Afternoon atmospheric pressure.
+      - field: cloud_cover_pct
+        type: float64
+        unit: '%'
+        description: Afternoon cloud cover.
+      - field: wind_max_ms
+        type: float64
+        unit: m/s
+        description: Daily maximum wind speed.
+      - field: wind_max_deg
+        type: float64
+        unit: degrees
+        description: Direction at wind_max_ms occurrence.
+    sampled_regions:
+      - {code: '121', name: 'NSW North West Slopes and Plains',            zone: Wheat-Sheep,   lat: -30.4927, lon: 149.1082}
+      - {code: '122', name: 'NSW Central West',                            zone: Wheat-Sheep,   lat: -32.4592, lon: 148.2871}
+      - {code: '123', name: 'NSW Riverina',                                zone: Wheat-Sheep,   lat: -34.4014, lon: 146.5049}
+      - {code: '221', name: 'VIC Mallee',                                  zone: Wheat-Sheep,   lat: -35.1072, lon: 142.1623}
+      - {code: '222', name: 'VIC Wimmera',                                 zone: Wheat-Sheep,   lat: -36.4753, lon: 141.8499}
+      - {code: '322', name: 'QLD Western Downs and Central Highlands',     zone: Wheat-Sheep,   lat: -25.2380, lon: 149.0099}
+      - {code: '421', name: 'SA Eyre Peninsula',                           zone: Wheat-Sheep,   lat: -33.3796, lon: 136.1039}
+      - {code: '521', name: 'WA Central and Southern Wheat Belt',          zone: Wheat-Sheep,   lat: -31.6075, lon: 117.1038}
+      - {code: '522', name: 'WA Northern and Eastern Wheat Belt',          zone: Wheat-Sheep,   lat: -30.3843, lon: 118.2580}
+      - {code: '631', name: 'TAS Tasmania',                                zone: High Rainfall, lat: -42.1424, lon: 146.6725}
+    known_quirks:
+      - 'API key management. OPENWEATHER_API_KEY stored in .env (gitignored per scope v5 §11.11),
+        loaded via python-dotenv. Never logged in cleartext; masked ("061dc7…9e58") in console
+        output. .env.example provides a template.'
+      - 'HTTP 504 transient during initial run (auto-recovered on resume). During 2026-05-18
+        initial run, region 222 date 2022-11-23 failed after 3 retries with HTTP 504 (Gateway
+        Timeout). On 2026-07-09 resume run (52 days later), the same date auto-recovered on the
+        first attempt. HTTP 504 confirmed transient. An ad-hoc phase01_s08b_refetch_singleton.py
+        script was drafted for this date and retired as redundant when the main resume auto-
+        recovered the record; never committed to git.'
+      - 'pyarrow first-use rule violation (corrected in-flight). pyarrow was not initially listed
+        in requirements.txt when Parquet persistence was added. First execution crashed at the first
+        Parquet write (~300-400 calls in). Corrective action: pip install pyarrow>=15;
+        requirements.txt updated in the same commit; re-ran. First-use rule reinforced in scope v5
+        §9.2, §11.7.'
+      - 'Region 322 name reconciliation. During s08a manual approval, region 322 was verbally
+        referred to as "QLD Eastern Darling Downs". The AAGIS shapefile actually labels code 322 as
+        "QLD Western Downs and Central Highlands". Same broadacre-relevant area; shapefile name is
+        canonical.'
+      - 'Effective rate ~22 calls/min (API-server-side limit). Client-side rate is 60 calls/min
+        (60 / 1.05s sleep). Actual throughput ~22 calls/min due to OpenWeather backend response
+        time. Not a client-side rate-limit issue; expected behaviour.'
+      - 'File size variation (21.8-30.5 KB) is climatic, not a defect. Smaller Parquet files
+        (~22 KB, e.g. region 123 NSW Riverina, region 521 WA Central WB) correspond to arid regions
+        where daily precipitation and wind values are frequently absent or near-zero, enabling more
+        effective Parquet dictionary compression.'
+      - 'Cost containment. Daily hard limit set to 11,000 calls in OpenWeather dashboard. Script
+        soft-quota at DAILY_CALL_QUOTA=10,500. Total cost across both sessions: ~£11.40 ≈ AUD $22.
+        First session (2026-05-18): 10,500 calls, ~£11.40. Resume session (2026-07-09): 460 calls,
+        within free quota (£0.00).'
+    license: OpenWeather API terms of service (research use permitted; attribution required).
+    attribution: 'Weather data by OpenWeather (openweathermap.org). Historical data via One Call
+      API 3.0.'
+    citation: 'OpenWeather Ltd. One Call API 3.0 — Historical Weather (day_summary endpoint).
+      OpenWeather; accessed 2026-05-18 (initial) and 2026-07-09 (resume).'
+    renewal_or_versioning: 'API is live and continuously updated. Project 5 v1.0 uses the
+      2026-05-18 → 2026-07-09 acquisition snapshot spanning 2022-01-01 to 2024-12-31.'
+    verification_check:
+      total_records_target: 10960
+      total_records_acquired: 10960
+      coverage_pct: 100.0
+      n_parquet_files: 30
+      total_size_kb_approx: 820
+      total_cost_gbp: 11.40
+      subscription_plan: 'One Call API 3.0 Base plan (pay-per-call, 1000 free/day, £0.0012/call
+        after)'
+
+  - key: agfd
+    name: ABARES Australian Gridded Farm Data (AGFD) — farmpredict simulation outputs
+    provider: Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES)
+    phase_added: '09'
+    role_in_project: Phase 09 independent validation benchmark only (scope v5 §4.6). NEVER a
+      training target and never substituted for observed yield.
+    retrieval:
+      method: Deferred to Phase 09.
+      url: TBD — exact download URL and vintage to be resolved at Phase 09 acquisition.
+      retrieval_date: null
+      retriever: scripts/phase09_sXX_ingest_agfd.py + src/ingestion/agfd.py (to be created at
+        Phase 09)
+    format: NetCDF (gridded, expected 0.05° resolution matching SILO).
+    spatial_unit: 0.05° grid cell on WGS84 (expected).
+    crs_upstream: EPSG:4326 (WGS84, expected)
+    crs_stored: EPSG:4326 (WGS84, expected)
+    n_features: null
+    n_features_note: Not yet ingested. Gridded data (not vector).
+    paths:
+      raw: data/raw/agfd/ (to be created at Phase 09)
+      raw_gitignored: true
+      processed: data/processed/agfd/ (to be created at Phase 09)
+    data_dictionary:
+      - field: (planned)
+        type: (TBD)
+        description: 'Variables of interest: simulated broadacre yield, simulated farm profitability,
+          simulated inputs. Full data dictionary populated at Phase 09 ingestion.'
+    known_quirks:
+      - 'CRITICAL — AGFD is simulation output, NOT observation. AGFD is the output of the ABARES
+        farmpredict model conditioned on climate, prices, and representative farm characteristics —
+        not observed farm data. Using it as a training target for Pillars 3-4 would constitute a
+        circularity error. Scope v5 §4.6 and §2.5 explicitly forbid this use. AGFD is used ONLY as
+        an independent validation benchmark in Phase 09 synthesis, compared side-by-side against
+        project modelled outputs from Pillars 3-4.'
+      - 'Deferred to Phase 09. Not acquired in Phase 01 because usage is confined to the synthesis
+        phase.'
+    license: Creative Commons Attribution 4.0 International (CC BY 4.0, expected per ABARES default).
+    attribution: 'Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES) —
+      Australian Gridded Farm Data (AGFD), farmpredict model outputs.'
+    citation: 'Australian Bureau of Agricultural and Resource Economics and Sciences. Australian
+      Gridded Farm Data (AGFD) — farmpredict simulation outputs. Canberra: ABARES; (accessed date
+      to be recorded at Phase 09 acquisition).'
+    renewal_or_versioning: 'ABARES periodically refreshes AGFD alongside farmpredict methodology
+      updates. Phase 09 will pin the vintage at acquisition.'
+    verification_check: {}
+
+cross_source_concerns:
+
+  - concern_id: region_key_reconciliation
+    description: 'AAGIS shapefile (3-digit codes) vs ABARES FDP CSV (text names) vs ABS Census
+      (region_code integer, different granularity) all use different region-keying conventions.
+      Explicit mapping tables and aggregation utilities required for cross-source joins.'
+    resolution_phase: '02'
+    resolution_module: src/processing/region_aggregation.py (Phase 02)
+
+  - concern_id: per_farm_vs_region_total
+    description: 'ABARES FDP values are per-typical-farm (survey-weighted); ABS Census values are
+      region totals. Cross-comparison requires farm-count weighting via ABS `Number of agricultural
+      businesses` per region.'
+    resolution_phase: '02'
+    resolution_module: src/processing/abares_aggregation.py (Phase 02)
+
+  - concern_id: temporal_alignment
+    description: 'SILO daily (1961–2024) vs ABARES annual (1990–2024, financial year ending) vs
+      ABS 2020-21 single cross-section vs OpenWeather daily (2022–2024). Yield modelling window is
+      bounded by ABARES (1990+); SPEI is bounded by SILO evap_pan (1970+); OpenWeather comparison
+      is bounded by the 3-year sample window.'
+    resolution_phase: '02, 03'
+    resolution_module: null
+
+  - concern_id: observation_class_discipline
+    description: 'Observed / homogenised / derived_survey / derived_census / land_use_classification
+      / api_reanalysis / simulation distinctions must be preserved throughout downstream analysis.
+      AGFD (simulation) is never a training target; OpenWeather (api_reanalysis) is a validation
+      comparator not a climate input for Pillars 3-5.'
+    resolution_phase: 'ongoing (scope v5 §2.5)'
+    resolution_module: null
