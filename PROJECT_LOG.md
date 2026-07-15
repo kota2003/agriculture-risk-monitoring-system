@@ -743,3 +743,23 @@ documented rather than retroactively justified.
 **Scope:** No revision at this step; scope stays v5. Candidate refinements (crop-specific yield window; `Population` denominator decision; RSE-gate methodology) are logged here for the Phase 02 closure decision.
 
 **Impact:** Task B complete — the per-typical-farm -> region-total weighting pipeline is built, tested, and validated within ±5% for wheat, barley, and canola; region-total CSVs persisted. Unblocks Pillar 3–5 analyses that need region-total production/area (yield_t_ha was already usable). Next in Phase 02: the deferred `cross_check_aagis_region_names` remediation and/or the cross-validation tasks (C grid-vs-region SILO, D OpenWeather–SILO, E ACORN-SAT coverage).
+
+## 2026-07-15 — Phase 02, Step 03: cross_check_aagis_region_names remediation
+
+**Context:** Discharges the deferred Phase 01 latent-bug fix flagged in the s01 entry. `src/ingestion/abares.py::cross_check_aagis_region_names` selected its region field by substring match on "aagis"/"region"; given the actual GeoPackage columns [aagis, class, name, zone] it picked the numeric CODE column `aagis` and compared codes against FDP names, always reporting n_matching = 0 — it never validated name equality. Non-blocking; recorded at s01, remediated here as its own small step per PROJECT_WORKFLOW §2.3. Branch `phase-02-quality-and-crossvalidation`.
+
+**Adaptive override / fix (PROJECT_WORKFLOW §4.2):**
+- Original behaviour: substring field selection resolved to the numeric `aagis` code column.
+- Fix: prefer a known name field (`name`, `aagisname`, `aagis_name`, `region_name`, `region`); otherwise fall back to the first non-numeric text column; never a numeric code column. The dict return-value contract (keys) is unchanged, so the s06 orchestrator that consumes this helper is unaffected.
+
+**Actions:**
+
+1. Edited `cross_check_aagis_region_names` field-selection logic (src/ingestion/abares.py).
+2. Created `tests/test_abares_region_name_check.py`: locks `aagis_field_used == "name"`, 32/32 name matches, zero orphans on the real data (skips if data absent).
+3. Ran: new regression test PASS; full suite 14 passed (no existing test broke).
+
+**Dependencies:** none new.
+
+**Scope:** No revision. Code-level correctness fix; scope stays v5.
+
+**Impact:** The Phase 01 name-equality diagnostic now works correctly and agrees with the s01 `region_aggregation.validate_region_mapping` result (32/32, zero orphans). Deferred debt cleared. Remaining Phase 02: cross-validation tasks C (grid-vs-region SILO), D (OpenWeather–SILO), E (ACORN-SAT coverage), then the closure ceremony.

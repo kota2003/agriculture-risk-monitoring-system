@@ -429,19 +429,35 @@ def cross_check_aagis_region_names(
         return {"valid": False, "reason": f"aagis file not found: {aagis_gpkg_path}"}
 
     gdf = gpd.read_file(aagis_gpkg_path)
-    region_field_candidates = [
-        c for c in gdf.columns if "region" in c.lower() or "aagis" in c.lower()
-    ]
-    if not region_field_candidates:
+
+    # Select the AAGIS *name* field (text region names), not a numeric code
+    # column. The original heuristic matched "aagis"/"region" by substring and
+    # so picked the numeric `aagis` code column, comparing codes against names
+    # — it never actually validated name equality (fixed at Phase 02 s03).
+    # Prefer a known name field; otherwise fall back to the first non-numeric
+    # text column.
+    name_preference = ("name", "aagisname", "aagis_name", "region_name", "region")
+    lower_to_actual = {c.lower(): c for c in gdf.columns}
+    region_field = next(
+        (lower_to_actual[n] for n in name_preference if n in lower_to_actual),
+        None,
+    )
+    if region_field is None:
+        skip = {"geometry", "geom", "fid"}
+        for c in gdf.columns:
+            if c.lower() in skip:
+                continue
+            values = gdf[c].astype(str).str.strip()
+            is_numeric = values.str.replace(".", "", regex=False).str.isdigit().all()
+            if not is_numeric:
+                region_field = c
+                break
+    if region_field is None:
         return {
             "valid": False,
-            "reason": f"no region-like field in {list(gdf.columns)}",
+            "reason": f"no name-like field in {list(gdf.columns)}",
         }
 
-    region_field = next(
-        (c for c in region_field_candidates if c.lower() == "region"),
-        region_field_candidates[0],
-    )
     aagis_names = set(gdf[region_field].astype(str).str.strip().unique())
     fdp_names = set(df_regional["region"].astype(str).str.strip().unique())
 
