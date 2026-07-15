@@ -688,3 +688,33 @@ documented rather than retroactively justified.
 7. Three-way yield-source triangulation (ABARES per-farm, ABS SA2, AGFD deferred to Phase 09).
 
 **Impact:** Phase 01 complete. All substantive scope §6.2 Phase 01 deliverables satisfied. Phase 02 kickoff enabled from a clean, documented, reproducible state.
+
+## 2026-07-13 — Phase 02, Step 01: AAGIS region code ↔ FDP name mapping (Task A)
+
+**Context:** Phase 02 (Data Quality & Cross-Validation) kickoff. Working branch `phase-02-quality-and-crossvalidation` created from `main` (tag `v0.1-phase01-complete`). Baseline-hygiene fix first: `PROJECT_WORKFLOW.md` (Project 5 edition) was untracked at Phase 01 close and is now committed (`chore:` commit `f5c2dad`). Task A (scope v5 §3.1, §6.2, §11.6; phase01_summary §4.1) builds the canonical bridge between the AAGIS 3-digit region code (shapefile) and the ABARES FDP text region name (CSV), unblocking Pillar 3–5 spatial joins.
+
+**Empirical verification before creation (PROJECT_WORKFLOW §2.4):** Inspected the actual data products before writing any code:
+- `data/processed/aagis_regions_repaired.gpkg` feature table `aagis_regions`, attribute fields `[aagis, class, name, zone]` (32 rows).
+- `data/raw/abares/fdp-regional-historical.csv` column `ABARES region` (32 unique names).
+
+**Actions:**
+
+1. Created `src/processing/region_aggregation.py`: loads the canonical code↔name↔zone table from the GeoPackage, validates it against the FDP, and persists it atomically (`.part` → rename).
+2. Created `scripts/phase02_s01_region_mapping.py`: orchestration; prints the 32-row table + validation report, exits non-zero on failure.
+3. Created `tests/test_region_aggregation.py`: 4 tests (2 pure-logic, 2 data-backed; data-backed tests skip if the gitignored data is absent). First `tests/` directory in the project.
+4. Added `pytest>=8.0` to `requirements-dev.txt` (first-use dependency rule, PROJECT_WORKFLOW §8.2 — first Phase to import pytest).
+5. Ran the pipeline: **32/32 codes → 32 FDP names, zero orphans**; all 7 validation checks PASS; wrote `data/processed/region_mapping.csv` (gitignored, regeneratable). `pytest`: 4 passed.
+
+**Adaptive override (PROJECT_WORKFLOW §4.2):**
+- **Original plan** (phase01_summary §4.1): construct the mapping by cross-referencing a shapefile `AAGISname` field against the FDP names, validating via state prefix.
+- **Empirical trigger:** the GeoPackage already carries a `name` field whose 32 values match the FDP `ABARES region` names EXACTLY (zero orphans, verified). There is no `AAGISname` field; the real field is `name`.
+- **New plan:** Task A reduces from *construction* to *read + validate*. The module reads the canonical table directly and validates name-set equality, code well-formedness/uniqueness, code redundancy (`aagis == class`, all 32), and state-prefix sanity.
+- **Downstream consequence:** none negative — the mapping is more robust (single authoritative source) and cheaper to produce. Downstream Pillar 3–5 joins can key on either code or name.
+
+**Latent-bug finding (Phase 01 `src/ingestion/abares.py`):** `cross_check_aagis_region_names()` selects its region field by substring match on "region"/"aagis"; given the actual columns `[aagis, class, name, zone]` it picks the CODE column `aagis`, so it compared codes against names and always reported `n_matching = 0` — it never actually validated name equality. No data was corrupted (finding #1 "explicit mapping required" remains correct). Correct validation now lives in `region_aggregation.validate_region_mapping`. **Remediation deferred** to a dedicated Phase 02 step (out of s01 scope per PROJECT_WORKFLOW §2.3): a minimal fix to the field selection plus a regression test, logged as its own entry. Priority low, non-blocking. Reproducibility motivation: a fresh clone re-running s06 would otherwise see the misleading diagnostic.
+
+**Secondary confirmation:** the `zone` label agrees with the code's 2nd-digit decode (1=Pastoral, 2=Wheat Sheep, 3=High Rainfall) for all 32 rows; zone distribution 12/12/8 matches the s01 record; state distribution NSW 6 / VIC 4 / QLD 8 / SA 4 / WA 5 / TAS 1 / NT 4 = 32.
+
+**Scope:** No revision. This is a code-level finding, not a structural scope change; scope stays v5 (PROJECT_WORKFLOW §4.3). Finding #1 (mapping required) remains valid.
+
+**Impact:** Task A complete — a validated 32/32 region mapping is persisted and Pillar 3–5 spatial joins are unblocked. Next in Phase 02: ABARES per-typical-farm → region-total weighting (Task B) and the deferred `cross_check_aagis_region_names` remediation.
