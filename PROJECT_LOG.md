@@ -718,3 +718,28 @@ documented rather than retroactively justified.
 **Scope:** No revision. This is a code-level finding, not a structural scope change; scope stays v5 (PROJECT_WORKFLOW §4.3). Finding #1 (mapping required) remains valid.
 
 **Impact:** Task A complete — a validated 32/32 region mapping is persisted and Pillar 3–5 spatial joins are unblocked. Next in Phase 02: ABARES per-typical-farm → region-total weighting (Task B) and the deferred `cross_check_aagis_region_names` remediation.
+
+## 2026-07-15 — Phase 02, Step 02: ABARES per-typical-farm → region-total weighting (Task B)
+
+**Context:** Task B (scope v5 §4.3, §5.3, §6.2, §11.6; phase01_summary §4.1, §5). ABARES FDP reports per-typical-farm averages (Phase 01 finding #2), so extensive quantities (sown area, production) require farm-count weighting to become region totals. Builds on the s01 region mapping. Branch `phase-02-quality-and-crossvalidation`.
+
+**Correction (append-only log hygiene):** The preceding s01 entry is mis-dated 2026-07-13; the correct date is 2026-07-15. Both s01 and s02 were executed on 2026-07-15. Recorded here rather than editing the already-committed s01 line, per the append-only PROJECT_LOG convention (scope §7.1).
+
+**Denominator decision (empirically grounded; overrides phase01_summary §5 default):** Use the FDP `Population` variable (the survey's estimate of broadacre farm businesses per region-year) as the weighting denominator, NOT the ABS Census 2020-21 SA2 business counts. Rationale: region-native and per-year (no SA2<->AAGIS spatial join needed); internally exact because `Population` is the survey expansion factor — Σ_region(per-farm × Population) reconstructs the FDP national total to ratio 0.999–1.001 (verified wheat 2020/2021/2022). ABS-SA2 and ABARES national counts are retained as independent Task G cross-checks, not the primary weight.
+
+**Actions:**
+
+1. Created `src/processing/abares_aggregation.py`: loads `Population`; weights `area_ha`->`area_total_ha` and `production_t`->`production_total_t`; carries `yield_t_ha` unchanged (intensive; per finding #2 it needs no weighting); atomic `.part`->rename write of region-total CSVs.
+2. Created `scripts/phase02_s02_abares_weighting.py`: runs wheat/barley/canola, validates, prints a per-year report, exits non-zero on failure.
+3. Created `tests/test_abares_aggregation.py`: 9 tests (pure-logic weighting + RSE-gate behaviour + data-backed ±5% reconstruction per commodity). All pass.
+4. Ran the pipeline: worst graded relative error wheat 0.31%, barley 0.69%, canola 3.35% — all within ±5%. Wrote three `data/processed/abares/<commodity>_region_totals.csv` (gitignored, 1114 rows each). Weighting identity independently verified 1114/1114 exact.
+
+**New data-quality rule — survey-reliability RSE gate (Kota-approved):** A year is graded against the ±5% tolerance only if it has full 32-region coverage AND the FDP national production RSE ≤ 20%. Motivation: the exit criterion's "survey-error tolerance" must not be applied to years whose survey error is itself extreme. Empirical trigger: early canola (1990–1993) has national production RSE 22–88% and is integer-rounded to 1–3 t/farm, so reconstruction error reaches 16–29% from quantization + sampling noise alone; from 1994 on, RSE ≤ 15% and reconstruction error ≤ 3.4%. The gate excludes 1990–1993 for canola (1990–91 are also partial-coverage), leaving 31 graded canola years. Constant `RSE_GATE_THRESHOLD = 20.0` in `abares_aggregation.py`.
+
+**Finding — crop-specific reliable yield window:** wheat and barley reconstruct reliably across 1990+, but canola's reliable window effectively begins 1994. This refines scope §3.3 (currently "FDP earliest = 1990"). Scope treatment (patch v5.1 vs methodology.md note) is deferred to the Phase 02 closure ceremony, where all Phase 02 findings are reconciled together.
+
+**Dependencies:** none new (`pytest` was added at s01).
+
+**Scope:** No revision at this step; scope stays v5. Candidate refinements (crop-specific yield window; `Population` denominator decision; RSE-gate methodology) are logged here for the Phase 02 closure decision.
+
+**Impact:** Task B complete — the per-typical-farm -> region-total weighting pipeline is built, tested, and validated within ±5% for wheat, barley, and canola; region-total CSVs persisted. Unblocks Pillar 3–5 analyses that need region-total production/area (yield_t_ha was already usable). Next in Phase 02: the deferred `cross_check_aagis_region_names` remediation and/or the cross-validation tasks (C grid-vs-region SILO, D OpenWeather–SILO, E ACORN-SAT coverage).
