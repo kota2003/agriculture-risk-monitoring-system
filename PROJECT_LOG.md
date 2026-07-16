@@ -763,3 +763,33 @@ documented rather than retroactively justified.
 **Scope:** No revision. Code-level correctness fix; scope stays v5.
 
 **Impact:** The Phase 01 name-equality diagnostic now works correctly and agrees with the s01 `region_aggregation.validate_region_mapping` result (32/32, zero orphans). Deferred debt cleared. Remaining Phase 02: cross-validation tasks C (grid-vs-region SILO), D (OpenWeather–SILO), E (ACORN-SAT coverage), then the closure ceremony.
+
+## 2026-07-16 — Phase 02, Step 04a: SILO grid -> AAGIS region means + Phase 01 s04 lat-flip fix (Task C, part 1)
+
+**Context:** Task C part 1 (scope v5 §4.2, §6.2; phase01_summary §4.2): aggregate the cropping-masked SILO climate grid to AAGIS-region climatologies for the grid-vs-region consistency check. Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables (s04a):**
+
+1. `src/processing/silo_region_aggregation.py` — cropping-cell -> AAGIS-region assignment (geopandas point-in-polygon, cached parquet); cos(lat) area-weighted region means; single-pass annual + monthly-climatology aggregation.
+2. `scripts/phase02_s04a_silo_region_means.py` — orchestrator (coverage report + 1991-2020 reference-period aggregation).
+3. `tests/test_silo_region_aggregation.py`, `tests/test_silo_masking.py`.
+4. Gitignored outputs: `silo_cell_region_map.parquet` (28,577 cells), `silo_region_means/annual_1991_2020.csv` (5,400 rows), `monthly_climatology_1991_2020.csv` (2,160 rows).
+
+**Cell-region coverage:** 28,721 t005 cropping cells -> 28,577 assigned (99.5%; 144 near-coast cells outside all regions); 30/32 regions covered (the 2 uncovered are Pastoral: WA Kimberley, NT Alice Springs). Every broadacre (Wheat-Sheep / High-Rainfall) region covered; cell counts concentrate in the wheat belt (WA 521: 4,442; NSW 121: 3,368; ...), matching Australian broadacre geography.
+
+**MAJOR finding — Phase 01 s04 latitude-flip masking bug (discovered at s04a, fixed):**
+- **Symptom:** under correct coordinate-based sampling only 7.9% of cropping cells carried SILO data; WA/SA/VIC/TAS wheat-belt regions were ~0% valid; Tasmania all-NaN.
+- **Root cause:** `src/ingestion/silo.py` applied the mask via `mask.assign_coords(lat=da_raw["lat"].values)` — a POSITIONAL coordinate substitution. The mask is latitude-descending (cropping_mask.py `np.linspace(-10, -44)`) while SILO data is ascending, so the substitution flipped the mask north-south. Cropping cells were masked at their latitude mirror (WA wheat-belt -> Pilbara, Tasmania -> tropical ocean) and the true cropping cells' climate was set to NaN. The flipped values looked plausible (WA sampled arid Pilbara, ~288 mm / 33 degC), which is why it evaded notice until the region-level cross-check.
+- **Fix:** replace positional `assign_coords` with coordinate-value `reindex(..., method="nearest", tolerance=0.025)`; add `_assert_masking_sane` guard (latitude-centroid check, fail-fast on any flip); add synthetic regression tests (`tests/test_silo_masking.py`). The s04a aggregation resolves grid indices by coordinate value (`resolve_cell_grid_indices`), robust to axis ordering.
+- **Remediation:** deleted the flipped processed SILO; re-ran `phase01_s04` (re-download raw + re-mask, guard active, 375 files, 0 errors, 13.38 GB) on 2026-07-15/16; re-ran s04a.
+- **Verification:** post-fix all 6 variables cover all 30 regions (5,400 annual rows), zero NaN, zero spurious rain=0; region climatologies plausible and geographically correct (WA wheat-belt 403 mm / 24.1 degC; TAS 656 mm / 16.9 degC; latitude-consistent temperature gradient). Full suite: 23 passed, including the TAS alignment guard that fails on flipped data.
+
+**Discipline note:** this is exactly the class of data-integrity error Phase 02 (Data Quality & Cross-Validation) exists to catch, found before any Pillar 1-2 analysis was built on it. Post-masking spatial validation should have existed in Phase 01 s04; it now does.
+
+**Adaptive override (PROJECT_WORKFLOW §4.2):** the s04a plan (aggregate existing masked SILO) changed mid-execution upon discovering the upstream masking flip; the plan expanded to include the Phase 01 s04 fix + full SILO regeneration before the aggregation could be trusted.
+
+**Dependencies:** none new.
+
+**Scope:** no revision at this step; scope stays v5. The Phase 01 s04 masking correction and the new masking guard are candidates for a methodology.md note (and possibly scope patch v5.1) at the Phase 02 closure ceremony. The Phase 01 tag `v0.1-phase01-complete` is not re-cut: the corrected artifact is gitignored regenerable data, and the code fix is committed within Phase 02.
+
+**Impact:** s04a complete — validated, area-weighted SILO region climatologies persisted; a Phase 01 latitude-flip data bug corrected across the full SILO archive (13.38 GB). Unblocks s04b (grid-vs-region consistency write-up) and the Pillar 1-2 climate pipeline. Next: s04b consistency documentation; then Task D (OpenWeather-SILO) and Task E (ACORN-SAT coverage).
