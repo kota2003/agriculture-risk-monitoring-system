@@ -823,3 +823,31 @@ documented rather than retroactively justified.
 **Scope:** no revision; scope stays v5.
 
 **Impact:** Task C complete — grid-vs-region aggregation consistency confirmed (internal quantitative battery + external BoM plausibility) and documented in `outputs/tables`. The corrected SILO region climatologies are trustworthy inputs for Pillars 1-2. Remaining Phase 02: Task D (OpenWeather-SILO comparison), Task E (ACORN-SAT coverage), then closure.
+
+## 2026-07-17 — Phase 02, Step 05: ACORN-SAT coverage impact assessment (Task E)
+
+**Context:** Task E (scope v5 §4.2, §12.2; phase01_summary §4.2, finding #5). Quantifies the impact of the 18 unavailable ACORN-SAT stations on regional SILO validation. ACORN-SAT is the homogenised station truth used to sanity-check SILO grids; a broadacre region with no available station can only be validated indirectly. Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables:**
+
+1. `src/processing/acornsat_coverage.py` — station load + availability, point-in-polygon assignment to AAGIS regions, per-region coverage counts + broadacre under-representation flags.
+2. `scripts/phase02_s05_acornsat_coverage.py` — orchestrator.
+3. `tests/test_acornsat_coverage.py` (2 synthetic + 1 data-backed).
+4. `outputs/tables/s05_acornsat_region_coverage.csv` (committed).
+
+**Method:** 112 ACORN-SAT stations (94 available / 18 unavailable per `bom_acornsat.ACORN_SAT_UNAVAILABLE_STATIONS`) assigned by point-in-polygon to AAGIS regions; per-region available/unavailable counts; broadacre (Wheat-Sheep / High-Rainfall) regions flagged no_station (0 available) or sparse (1 available).
+
+**Findings:**
+- 9 stations fall outside all AAGIS regions (remote islands / offshore) and are excluded; 86 available + 17 unavailable land in mainland regions.
+- 20 broadacre regions, 51 available stations among them.
+- **Broadacre region with NO available station:** QLD Eastern Darling Downs (321) — SILO there is validated only indirectly.
+- **Sparse (single available station):** NSW Central West (122), VIC Wimmera (222), VIC Central North (223), WA South West Coastal (531).
+- **Broadacre-relevant unavailable stations (lost truth):** 008039 Dalwallinu -> 522 WA Northern & Eastern Wheat Belt; 008051 Geraldton -> 521 WA Central & Southern Wheat Belt; 073054 Wyalong -> 122 NSW Central West. NSW Central West (122) is doubly affected (sparse AND lost Wyalong). Note: the bom_acornsat comment labelled Wyalong "NSW Riverina"; the actual polygon assignment is 122 NSW Central West — the code comment was approximate.
+
+**Assessment:** ACORN-SAT coverage of broadacre regions is generally adequate, but SILO-validation confidence is lower for QLD Eastern Darling Downs (no station) and the four sparse regions; the 18 unavailable stations remove station truth from the WA Wheatbelt (521/522) and NSW Central West (122). Documented, not a blocker — downstream SILO-based indicators in these regions carry a validation caveat.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5. Finding #5's "3 broadacre-relevant" unavailable stations are confirmed; the Wyalong region-label refinement (Central West, not Riverina) is a minor factual note, candidate for a methodology.md note at closure.
+
+**Impact:** Task E complete — ACORN-SAT station coverage per AAGIS region documented, broadacre under-representation flagged. Phase 02 cross-validation tasks C and E done; remaining: Task D (OpenWeather-SILO comparison), then the closure ceremony.
