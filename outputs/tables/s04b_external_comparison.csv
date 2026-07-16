@@ -1,0 +1,4 @@
+aagis_code,region_name,bom_station,silo_rain_mm,bom_rain_mm,silo_tmax_c,bom_tmax_c,silo_tmin_c,bom_tmin_c,tmax_within_3C,rain_within_45pct,bom_url
+221,VIC Mallee,Mildura (076031),308.3,278.0,23.8,23.8,9.6,10.4,True,True,https://www.bom.gov.au/climate/averages/tables/cw_076031.shtml
+521,WA Central and Southern Wheat Belt,Merredin (010092),402.5,310.0,24.1,25.4,10.8,11.5,True,True,http://www.bom.gov.au/climate/averages/tables/cw_010092.shtml
+123,NSW Riverina,Wagga Wagga (072150),468.9,614.0,23.2,22.5,9.5,9.4,True,True,https://www.bom.gov.au/climate/averages/tables/cw_072150_All.shtml

@@ -793,3 +793,33 @@ documented rather than retroactively justified.
 **Scope:** no revision at this step; scope stays v5. The Phase 01 s04 masking correction and the new masking guard are candidates for a methodology.md note (and possibly scope patch v5.1) at the Phase 02 closure ceremony. The Phase 01 tag `v0.1-phase01-complete` is not re-cut: the corrected artifact is gitignored regenerable data, and the code fix is committed within Phase 02.
 
 **Impact:** s04a complete — validated, area-weighted SILO region climatologies persisted; a Phase 01 latitude-flip data bug corrected across the full SILO archive (13.38 GB). Unblocks s04b (grid-vs-region consistency write-up) and the Pillar 1-2 climate pipeline. Next: s04b consistency documentation; then Task D (OpenWeather-SILO) and Task E (ACORN-SAT coverage).
+
+## 2026-07-17 — Phase 02, Step 04b: grid-vs-region SILO aggregation consistency check (Task C, part 2)
+
+**Context:** completes the grid-vs-region consistency check (scope v5 §4.2, §6.2), building on the s04a region climatologies (and the s04a-fixed SILO data). Per the Phase 02 decision criteria, INTERNAL consistency is the primary/load-bearing check (reproducible from committed code + regenerable data); a BoM station comparison (observed, cited) is a supporting EXTERNAL plausibility check. Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables:**
+
+1. `src/processing/climate_consistency.py` — internal-consistency battery + external BoM comparison.
+2. `scripts/phase02_s04b_grid_region_consistency.py` — orchestrator (exit 1 on internal failure).
+3. `tests/test_climate_consistency.py` (4 synthetic + 1 data-backed).
+4. `outputs/tables/s04b_region_climatology_summary.csv`, `outputs/tables/s04b_external_comparison.csv` (committed small public tables).
+
+**Internal consistency (primary) — all pass, 20 broadacre regions:**
+- Coverage: every broadacre region present for all 6 variables; zero NaN; zero spurious zero-rain.
+- Temperature-latitude: corr(latitude, tmax) = +0.887, corr(latitude, tmin) = +0.938 (further south -> cooler), confirming area-weighting preserves the latitudinal temperature structure.
+- Rainfall seasonality regime: SW/southern Mediterranean regions (WA 521/522/531, SA 421) winter-dominant; subtropical/monsoon northern regions (QLD 322/331/332, NSW 121, NT 713/714) summer-dominant — reproduces the continental winter->summer rainfall gradient (WA 521 winter 54% / summer 19%; QLD 322 summer 54% / winter 19%; NT 713/714 summer 71-77%).
+
+**External plausibility (secondary; BoM normals, cited):**
+- VIC Mallee (221) vs Mildura: rain 308 vs 278 mm; tmax 23.8 vs 23.8 degC.
+- WA Wheat Belt (521) vs Merredin: rain 402 vs 310 mm (region spans wetter south Katanning ~480 to drier east Merredin ~310); tmax 24.1 vs 25.4.
+- NSW Riverina (123) vs Wagga Wagga: rain 469 vs 614 mm (region mean between drier west Hay ~365 and wetter east Wagga 614); tmax 23.2 vs 22.5.
+- tmax within +-3 degC and rainfall within region-vs-point tolerance for all anchors. Sources: BoM "Climate statistics for Australian locations" (Mildura 076031, Merredin 010092, Wagga 072150).
+
+**Decision-criteria note:** internal (reproducible) primary, external (observed BoM, cited) secondary — per the Phase 02 criteria discussion. `matplotlib` not added (scope earmarks it for Phase 03 EDA); a seasonality figure is deferred to Phase 03. The narrative will be consolidated into the data quality report at Phase 02 closure.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5.
+
+**Impact:** Task C complete — grid-vs-region aggregation consistency confirmed (internal quantitative battery + external BoM plausibility) and documented in `outputs/tables`. The corrected SILO region climatologies are trustworthy inputs for Pillars 1-2. Remaining Phase 02: Task D (OpenWeather-SILO comparison), Task E (ACORN-SAT coverage), then closure.
