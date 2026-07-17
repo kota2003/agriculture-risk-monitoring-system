@@ -70,7 +70,7 @@
 
 **Context:** Repo needs `.gitignore`, `LICENSE` (MIT), `.python-version`, `.pre-commit-config.yaml`.
 
-**Decision:** No generator script (avoiding accumulation of ephemeral scripts). Claude provides file content directly; Kota places via editor.
+**Decision:** No generator script (avoiding accumulation of ephemeral scripts). File content is provided directly; Kota places via editor.
 
 **Pre-emptive .gitignore patterns added:**
 - `*_v[0-9].py`, `*_FINAL*` — Project 4 lesson 3 (backup file accumulation at repo root)
@@ -139,7 +139,7 @@ the Project 5 quality bar to Master-research-grade portfolio standards. The eval
 lenses now include research-lab admissions committees, professors, and academically
 literate hiring managers — the project must defend itself as a Master researcher's
 portfolio piece, not merely as a polished industry artefact. Reviewing the v3 scope and
-Claude's preliminary Phase 01 recommendations (point-centroid SILO sampling at AAGIS
+The preliminary Phase 01 recommendations (point-centroid SILO sampling at AAGIS
 region centroids) under this raised bar revealed engineering compromises that would
 not withstand research-peer-review scrutiny — specifically (a) Modifiable Areal Unit
 Problem (MAUP) exposure from single-unit framing, (b) information loss from
@@ -185,7 +185,7 @@ engineering work in Phase 01–04 but produces results that survive peer review.
   stated 17–31 week band, no need to widen the band.
 
 **Honesty note:** This recalibration was triggered by explicit user instruction to
-raise the quality bar, not by discovery of new technical information. Claude's initial
+raise the quality bar, not by discovery of new technical information. The initial
 recommendation in this chat (point-centroid SILO sampling) was below the new bar and
 is retracted in favour of the v4 design. Per the Project 4 adaptive-override convention
 (documented in portfolio_finalisation_playbook §15), the retraction is documented here
@@ -304,7 +304,7 @@ deferred to Phase 03 EDA.
   truth; no version bump to v5 since the methodology design is
   unchanged, only the numerical/spelling parameters that backed it.
 
-**Honesty note on prior turn:** Claude's previous-turn hypothesis that
+**Honesty note on prior turn:** The previous-turn hypothesis that
 .apply(make_valid) was causing a hang was unverified speculation;
 the actual cause of the first run's interruption was likely
 output-flush timing being interpreted as hang. The second run with

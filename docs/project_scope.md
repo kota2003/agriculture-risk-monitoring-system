@@ -742,7 +742,7 @@ Per PROJECT_WORKFLOW §11.3:
 
 - **Code / file names / comments / commit messages**: English
 - **README, findings.md, methodology.md, project_scope.md, PROJECT_LOG.md**: English
-- **Conversation between user and Claude**: Japanese by default
+- **Working conversation**: Japanese by default
 - **Bilingual deliverables (portfolio-facing summaries for LinkedIn / resume)**: EN + JP versions where helpful
 
 ### 11.4 PROJECT_LOG.md discipline
@@ -790,7 +790,7 @@ Phase 02 promotion candidates identified in Phase 01:
 - Conclusion section honest about limitations.
 - No leftover debug prints or commented-out code.
 
-### 11.10 Knowledge management (Claude side)
+### 11.10 Knowledge management (session context)
 
 At each phase boundary, recommend Knowledge updates to the user. Aim for ~5 files:
 
@@ -1008,9 +1008,4 @@ Phase 01 tag: `v0.1-phase01-complete` (annotated, on the merge commit into `main
 | v2 | 2026-05-09 | Research-depth framing; SILO/BoM/ABARES primary with OpenWeather as validation; ABARES regions; broadacre tiered scope; 1961+/1980+ hybrid temporal design; six methodological pillars; 11-phase plan |
 | v3 | 2026-05-11 | Formal title and codename aligned with GitHub repo; tech stack switched from conda hybrid to pip + venv, CPU-only; GPU support dropped; code quality tooling added; Python 3.11 → 3.12 to match Project 4 |
 | v4 | 2026-05-14 | Pre-Phase 01 recalibration to Master-research-grade. Mixed-resolution spatial strategy (§3.6); grid-based SILO ingestion with ACLUMP cropping mask (§4.1, §4.4); AGFD as Phase 09 independent validation with observed-vs-derived discipline (§4.6, §2.5); MAUP robustness study (§5.6.2); AAGIS region formally named as primary yield unit (§3.1); xarray/netCDF4/rasterio added to stack |
-| **v5** | **2026-07-09** | **Post-Phase 01 empirical reconciliation.** 7 findings from Phase 01 data acquisition reflected across the document: (a) §3.1, §11.6 AAGIS 3-digit code ↔ FDP text name mismatch documented; Phase 02 mapping table task defined. (b) §4.3, §5.3, §11.6 ABARES FDP per-typical-farm semantics documented; Phase 02 farm-count-weighting task defined. (c) §3.3, §4.3 yield-modeling period 1980 → 1990 (ABARES FDP earliest year). (d) §4.3, §13 ABS Ag Census 2020-21 = final Census; post-2020-21 requires modernised pipeline (out of v1.0 scope). (e) §4.2, §12.2 ACORN-SAT 18 stations unavailable; effective count = 94. (f) §4.1, §3.3, §5.1 SILO evappan effective from 1970; SPEI restricted to 1970+. (g) §4.5, §5.6.4 OpenWeather 10-region selection concretised with lat/lon centroids; 2022–2024 sample; 100% coverage acquired; total cost £11.40. Additional structural updates: §6.2 Phase 00 and Phase 01 marked complete with actual volumes; §9.2 runtime dependency list updated with openpyxl / python-dotenv / pyarrow; §11.7 first-use rule reiterated; §11.11 secrets management section added; Appendix A repo structure updated to reflect post-Phase 01 state; Appendix B Phase 01 tag documented. |
-| **v5.1** | **2026-07-17** | **Phase 02 close (patch).** §3.3 refined: canola reliable yield window begins 1994 (RSE-gate finding); wheat/barley remain 1990+. Other Phase 02 methods (FDP `Population` denominator; RSE gate; SILO masking latitude-flip fix + `_assert_masking_sane` guard; grid-vs-region consistency method; OpenWeather–SILO §5.6.4 populated) are recorded in `docs/methodology.md` §7 and `docs/phase_summaries/phase02_summary.md`; scope framing otherwise unchanged. |
-
----
-
-*End of Project Scope v5.1.*
+| **v5** | **2026-07-09** | **Post-Phase 01 empirical reconciliation.** 7 findings from Phase 01 data acquisition reflected across the document: (a) §3.1, §11.6 AAGIS 3-digit code ↔ FDP text name mismatch documented; Phase 02 mapping table task defined. (b) §4.3, §5.3, §11.6 ABARES FDP per-typical-farm semantics documented; Phase 02 farm-count-weighting task defined. (c) §3.3, §4.3 yield-modeling period 1980 → 1990 (ABARES FDP earliest year). (d) §4.3, §13 ABS Ag Census 2020-21 = final Census; post-2020-21 requires modernised pipeline (out of v1.0 scope). (e) §4.2, §12.2 ACORN-SAT 18 stations unavailable; effective count = 94. (f) §4.1, §3.3, §5.1 SILO evappan effective from 1970; SPEI restricted to 1970+. (g) §4.5, §5.6.4 OpenWeather 10-region selection concretised with lat/lon centroids; 2022–2024 sample; 100% coverage acquired; total cost £11.40. Additional structural updates: §6.2 Phase 00 and Phase 01 marked complete with actual volumes; §9.2 runtime dependency list updated with openpyxl / python-dot

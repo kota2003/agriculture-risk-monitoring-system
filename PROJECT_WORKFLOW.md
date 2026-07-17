@@ -6,7 +6,7 @@
 **Project:** Project 5 — Agriculture Risk Monitoring System (`agriculture-risk-monitoring-system`)
 **Last updated:** 2026-07-10 (post-Phase 01 s09 closure)
 **Antecedent:** `~/Portfolio/PROJECT_WORKFLOW.md` (Kota's Project 4 original, 2026-04-23) — the ancestor document; this file extends its conventions with Project 5–specific practice.
-**Reader:** future Kota starting a Phase 02+ chat; Claude in any Project 5 chat session.
+**Reader:** future Kota starting a Phase 02+ session; the AI pair-programming assistant in any Project 5 session.
 
 ---
 
@@ -55,7 +55,7 @@ Phase 00 was **Scope & Setup** (scope lock, environment lock, foundational utili
 
 Steps within a phase are `sYY`, zero-padded, sequential: `s01`, `s02`, ..., `s09`. Each step:
 
-- Has a single narrow goal that a Claude chat session can plan, execute, and log in one sitting.
+- Has a single narrow goal that one working session can plan, execute, and log in one sitting.
 - Produces a named artefact (a script, a data file, a notebook section, a documentation update).
 - Ends with a PROJECT_LOG entry describing the decision + outcome.
 
@@ -72,7 +72,7 @@ Typical step count per phase in Project 5: 5–9 (Phase 01 executed s01 through 
 
 ### 2.1 Fresh session start
 
-Each new Claude chat session begins by reloading context. The recommended kickoff prompt pattern:
+Each new working session begins by reloading context. The recommended kickoff prompt pattern:
 
 ```
 Phase XX — <phase title> kickoff.
@@ -119,7 +119,7 @@ The reason: PROJECT_LOG entries are step-granular and should track chat-granular
 Two Project 5 Phase 01 s09 failures illustrate this rule:
 
 - **manifest.yaml v0.5 first draft** (2026-07-10): initial draft used `document_version:` root-keyed structure inferred from memory; the actual file used `project:` root-keyed with `sources:` as list. Empirical file inspection would have caught the error immediately.
-- **PROJECT_WORKFLOW.md initial creation** (2026-07-10): Claude drafted a new WORKFLOW file after Kota stated no WORKFLOW existed; Portfolio parent folder in fact contained Kota's Project 4 WORKFLOW at `~/Portfolio/PROJECT_WORKFLOW.md`. This document is the reconciled version.
+- **PROJECT_WORKFLOW.md initial creation** (2026-07-10): an initial WORKFLOW file was drafted after Kota noted no WORKFLOW existed; Portfolio parent folder in fact contained Kota's Project 4 WORKFLOW at `~/Portfolio/PROJECT_WORKFLOW.md`. This document is the reconciled version.
 
 Both were corrected without data loss because the empirical inspection was performed *before* the wrong version overwrote the correct one. The rule for future work: **verify empirically before creating**, treat chat responses as one signal among many, and never let a memory-based reconstruction overwrite an unread file.
 
@@ -272,7 +272,7 @@ Documented example from Project 5 Phase 01 → Phase 02:
 
 ## 6. Bilingual policy
 
-Project 5 spans English (deliverables, code) and Japanese (conversation with Claude).
+Project 5 spans English (deliverables, code) and Japanese (working conversation).
 
 | Artefact class | Language |
 |---|---|
@@ -280,7 +280,7 @@ Project 5 spans English (deliverables, code) and Japanese (conversation with Cla
 | Commit messages, branch names, git tags | English |
 | File names, directory names | English |
 | README, `findings.md`, `methodology.md`, `docs/project_scope.md`, `PROJECT_LOG.md`, this file | English |
-| Conversation between Kota and Claude | Japanese by default |
+| Working conversation | Japanese by default |
 | Bilingual portfolio-facing summaries (LinkedIn, resume) | EN + JP versions where helpful |
 
 **Rationale:** All artefacts a hiring manager or research reviewer might read are in English. Conversation is in the language Kota thinks fastest in.
@@ -480,17 +480,17 @@ git tag -l -n5
 
 ---
 
-## 10. Knowledge management (Claude side)
+## 10. Knowledge management (session context)
 
-At each phase boundary, the Knowledge section attached to the Claude Project is refreshed. Project 5's Knowledge is intended to hold:
+At each phase boundary, the Knowledge section attached to the working session is refreshed. Project 5's Knowledge is intended to hold:
 
 1. **This file** (`PROJECT_WORKFLOW.md`, Project 5 version).
 2. `portfolio_finalisation_playbook.md` (copied or referenced from `~/Portfolio/`).
 3. `docs/project_scope.md` (current version — Project 5 is at v5 as of 2026-07-09).
 4. **The most recent phase summary** (rolling — replace previous phase's summary at each boundary, or keep both if scope evolution context is valuable).
-5. `PROJECT_LOG.md` (current state) — practical addition beyond Kota's Project 4 convention because it provides the empirical-decision audit trail Claude needs to reason about next-phase choices.
+5. `PROJECT_LOG.md` (current state) — practical addition beyond Kota's Project 4 convention because it provides the empirical-decision audit trail needed to reason about next-phase choices.
 6. `docs/methodology.md` (skeleton, once created at Phase 01 s09).
-7. `requirements.txt` (Claude reasons about available libraries when planning scripts).
+7. `requirements.txt` (available libraries are considered when planning scripts).
 
 Optional addition:
 
