@@ -1,6 +1,6 @@
 project:
   name: agriculture-risk-monitoring-system
-  scope_version: v5
+  scope_version: v5.1
   manifest_schema_version: '1.0'
   description: Data source registry for Project 5. Each entry under 'sources' records canonical
     provenance (retrieval URL, date, retriever), storage layout, semantic schema, known quirks,
@@ -699,3 +699,33 @@ cross_source_concerns:
       comparator not a climate input for Pillars 3-5.'
     resolution_phase: 'ongoing (scope v5 §2.5)'
     resolution_module: null
+
+phase02_processed_products:
+  description: Derived data products created in Phase 02 (Data Quality & Cross-Validation).
+    All are gitignored and regenerable from the committed scripts + Phase 01 sources.
+  products:
+    - key: region_mapping
+      path: data/processed/region_mapping.csv
+      producer: scripts/phase02_s01_region_mapping.py
+      description: AAGIS 3-digit code to FDP region-name mapping (32 rows; code, name, zone, state).
+    - key: abares_region_totals
+      path: data/processed/abares/<commodity>_region_totals.csv
+      producer: scripts/phase02_s02_abares_weighting.py
+      description: Region totals (area_total_ha, production_total_t) = per-typical-farm x FDP Population,
+        plus yield_t_ha; wheat/barley/canola.
+    - key: silo_cell_region_map
+      path: data/processed/silo_cell_region_map.parquet
+      producer: scripts/phase02_s04a_silo_region_means.py
+      description: 28,577 SILO cropping cells assigned to AAGIS regions (lat/lon, weight, aagis_code).
+    - key: silo_region_means
+      path: data/processed/silo_region_means/annual_1991_2020.csv + monthly_climatology_1991_2020.csv
+      producer: scripts/phase02_s04a_silo_region_means.py
+      description: cos(lat)-area-weighted SILO region climatologies (6 variables) over 1991-2020.
+  committed_output_tables:
+    - outputs/tables/s04b_region_climatology_summary.csv
+    - outputs/tables/s04b_external_comparison.csv
+    - outputs/tables/s05_acornsat_region_coverage.csv
+    - outputs/tables/s06_openweather_silo_metrics.csv
+  notes:
+    - SILO processed archive regenerated in Phase 02 s04a after fixing a Phase 01 s04 latitude-flip
+      masking bug (see PROJECT_LOG 2026-07-16; methodology.md 7.3).

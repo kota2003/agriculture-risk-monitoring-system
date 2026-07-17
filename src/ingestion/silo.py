@@ -225,6 +225,41 @@ def validate_silo_grid(raw_ds: xr.Dataset) -> None:
         )
 
 
+# Latitude tolerance (deg) for the post-alignment sanity guard.
+_MASK_CENTROID_TOL_DEG = 1.0
+
+
+def _assert_masking_sane(mask_da: xr.DataArray, mask_aligned: xr.DataArray) -> None:
+    """
+    Fail loudly if grid alignment moved the cropping cells (e.g. a north-south
+    flip). Compares the latitude centroid of the cropping cells before and
+    after alignment; a positional coordinate substitution on oppositely
+    ordered axes mirrors this centroid about ~-27 deg (the Phase 02 s04a bug).
+
+    Raises
+    ------
+    RuntimeError
+        If the cropping-cell count changes materially or the latitude centroid
+        shifts by more than ``_MASK_CENTROID_TOL_DEG``.
+    """
+    n_ref = int(mask_da.sum().item())
+    n_new = int(mask_aligned.sum().item())
+    if n_ref == 0:
+        raise RuntimeError("cropping mask has no True cells")
+    if abs(n_new - n_ref) > 0.01 * n_ref:
+        raise RuntimeError(
+            f"cropping-cell count changed during alignment ({n_ref} -> {n_new})"
+        )
+    ref_lat = float((mask_da["lat"] * mask_da).sum().item() / n_ref)
+    new_lat = float((mask_aligned["lat"] * mask_aligned).sum().item() / n_new)
+    if abs(new_lat - ref_lat) > _MASK_CENTROID_TOL_DEG:
+        raise RuntimeError(
+            f"cropping-mask latitude centroid moved {new_lat - ref_lat:+.1f} deg "
+            f"during alignment (ref {ref_lat:.1f}, aligned {new_lat:.1f}); likely a "
+            f"north-south grid flip (cf. Phase 02 s04a)"
+        )
+
+
 def apply_mask_and_persist(
     raw_nc_path: Path,
     variable: str,
@@ -260,15 +295,28 @@ def apply_mask_and_persist(
         da_raw = ds_raw[api_name]
         n_days = int(da_raw.sizes.get("time", 0))
 
-        # Align mask to raw lat/lon coordinates. The SILO grid spec
-        # matches our hardcoded grid, but the two arrays may have
-        # marginally different float coords due to rounding; xarray
-        # broadcasting needs them identical, so we substitute coords.
-        mask_aligned = mask_da.copy()
-        mask_aligned = mask_aligned.assign_coords(
-            lat=da_raw["lat"].values,
-            lon=da_raw["lon"].values,
+        # Align the cropping mask onto the raw SILO grid BY COORDINATE VALUE.
+        #
+        # The mask is stored latitude-DESCENDING (cropping_mask.py builds it
+        # with np.linspace(-10, -44, ...)) while SILO data files are latitude-
+        # ASCENDING. The earlier implementation substituted coordinates
+        # positionally (assign_coords), which silently FLIPPED the mask north-
+        # south: cropping cells landed on their latitude mirror (WA wheat-belt
+        # -> Pilbara, Tasmania -> tropical ocean), so the true cropping cells
+        # were masked to NaN. Discovered at Phase 02 s04a. `reindex` matches on
+        # coordinate LABELS and is robust to axis ordering; nearest + half-cell
+        # tolerance absorbs any float rounding between the two grids.
+        mask_aligned = (
+            mask_da.reindex(
+                lat=da_raw["lat"],
+                lon=da_raw["lon"],
+                method="nearest",
+                tolerance=0.025,  # half of the 0.05 deg grid spacing
+            )
+            .fillna(False)
+            .astype(bool)
         )
+        _assert_masking_sane(mask_da, mask_aligned)
 
         # Apply mask; keep spatial shape, non-cropping -> NaN.
         da_masked = da_raw.where(mask_aligned)

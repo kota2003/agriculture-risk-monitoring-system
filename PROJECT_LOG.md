@@ -688,3 +688,227 @@ documented rather than retroactively justified.
 7. Three-way yield-source triangulation (ABARES per-farm, ABS SA2, AGFD deferred to Phase 09).
 
 **Impact:** Phase 01 complete. All substantive scope §6.2 Phase 01 deliverables satisfied. Phase 02 kickoff enabled from a clean, documented, reproducible state.
+
+## 2026-07-13 — Phase 02, Step 01: AAGIS region code ↔ FDP name mapping (Task A)
+
+**Context:** Phase 02 (Data Quality & Cross-Validation) kickoff. Working branch `phase-02-quality-and-crossvalidation` created from `main` (tag `v0.1-phase01-complete`). Baseline-hygiene fix first: `PROJECT_WORKFLOW.md` (Project 5 edition) was untracked at Phase 01 close and is now committed (`chore:` commit `f5c2dad`). Task A (scope v5 §3.1, §6.2, §11.6; phase01_summary §4.1) builds the canonical bridge between the AAGIS 3-digit region code (shapefile) and the ABARES FDP text region name (CSV), unblocking Pillar 3–5 spatial joins.
+
+**Empirical verification before creation (PROJECT_WORKFLOW §2.4):** Inspected the actual data products before writing any code:
+- `data/processed/aagis_regions_repaired.gpkg` feature table `aagis_regions`, attribute fields `[aagis, class, name, zone]` (32 rows).
+- `data/raw/abares/fdp-regional-historical.csv` column `ABARES region` (32 unique names).
+
+**Actions:**
+
+1. Created `src/processing/region_aggregation.py`: loads the canonical code↔name↔zone table from the GeoPackage, validates it against the FDP, and persists it atomically (`.part` → rename).
+2. Created `scripts/phase02_s01_region_mapping.py`: orchestration; prints the 32-row table + validation report, exits non-zero on failure.
+3. Created `tests/test_region_aggregation.py`: 4 tests (2 pure-logic, 2 data-backed; data-backed tests skip if the gitignored data is absent). First `tests/` directory in the project.
+4. Added `pytest>=8.0` to `requirements-dev.txt` (first-use dependency rule, PROJECT_WORKFLOW §8.2 — first Phase to import pytest).
+5. Ran the pipeline: **32/32 codes → 32 FDP names, zero orphans**; all 7 validation checks PASS; wrote `data/processed/region_mapping.csv` (gitignored, regeneratable). `pytest`: 4 passed.
+
+**Adaptive override (PROJECT_WORKFLOW §4.2):**
+- **Original plan** (phase01_summary §4.1): construct the mapping by cross-referencing a shapefile `AAGISname` field against the FDP names, validating via state prefix.
+- **Empirical trigger:** the GeoPackage already carries a `name` field whose 32 values match the FDP `ABARES region` names EXACTLY (zero orphans, verified). There is no `AAGISname` field; the real field is `name`.
+- **New plan:** Task A reduces from *construction* to *read + validate*. The module reads the canonical table directly and validates name-set equality, code well-formedness/uniqueness, code redundancy (`aagis == class`, all 32), and state-prefix sanity.
+- **Downstream consequence:** none negative — the mapping is more robust (single authoritative source) and cheaper to produce. Downstream Pillar 3–5 joins can key on either code or name.
+
+**Latent-bug finding (Phase 01 `src/ingestion/abares.py`):** `cross_check_aagis_region_names()` selects its region field by substring match on "region"/"aagis"; given the actual columns `[aagis, class, name, zone]` it picks the CODE column `aagis`, so it compared codes against names and always reported `n_matching = 0` — it never actually validated name equality. No data was corrupted (finding #1 "explicit mapping required" remains correct). Correct validation now lives in `region_aggregation.validate_region_mapping`. **Remediation deferred** to a dedicated Phase 02 step (out of s01 scope per PROJECT_WORKFLOW §2.3): a minimal fix to the field selection plus a regression test, logged as its own entry. Priority low, non-blocking. Reproducibility motivation: a fresh clone re-running s06 would otherwise see the misleading diagnostic.
+
+**Secondary confirmation:** the `zone` label agrees with the code's 2nd-digit decode (1=Pastoral, 2=Wheat Sheep, 3=High Rainfall) for all 32 rows; zone distribution 12/12/8 matches the s01 record; state distribution NSW 6 / VIC 4 / QLD 8 / SA 4 / WA 5 / TAS 1 / NT 4 = 32.
+
+**Scope:** No revision. This is a code-level finding, not a structural scope change; scope stays v5 (PROJECT_WORKFLOW §4.3). Finding #1 (mapping required) remains valid.
+
+**Impact:** Task A complete — a validated 32/32 region mapping is persisted and Pillar 3–5 spatial joins are unblocked. Next in Phase 02: ABARES per-typical-farm → region-total weighting (Task B) and the deferred `cross_check_aagis_region_names` remediation.
+
+## 2026-07-15 — Phase 02, Step 02: ABARES per-typical-farm → region-total weighting (Task B)
+
+**Context:** Task B (scope v5 §4.3, §5.3, §6.2, §11.6; phase01_summary §4.1, §5). ABARES FDP reports per-typical-farm averages (Phase 01 finding #2), so extensive quantities (sown area, production) require farm-count weighting to become region totals. Builds on the s01 region mapping. Branch `phase-02-quality-and-crossvalidation`.
+
+**Correction (append-only log hygiene):** The preceding s01 entry is mis-dated 2026-07-13; the correct date is 2026-07-15. Both s01 and s02 were executed on 2026-07-15. Recorded here rather than editing the already-committed s01 line, per the append-only PROJECT_LOG convention (scope §7.1).
+
+**Denominator decision (empirically grounded; overrides phase01_summary §5 default):** Use the FDP `Population` variable (the survey's estimate of broadacre farm businesses per region-year) as the weighting denominator, NOT the ABS Census 2020-21 SA2 business counts. Rationale: region-native and per-year (no SA2<->AAGIS spatial join needed); internally exact because `Population` is the survey expansion factor — Σ_region(per-farm × Population) reconstructs the FDP national total to ratio 0.999–1.001 (verified wheat 2020/2021/2022). ABS-SA2 and ABARES national counts are retained as independent Task G cross-checks, not the primary weight.
+
+**Actions:**
+
+1. Created `src/processing/abares_aggregation.py`: loads `Population`; weights `area_ha`->`area_total_ha` and `production_t`->`production_total_t`; carries `yield_t_ha` unchanged (intensive; per finding #2 it needs no weighting); atomic `.part`->rename write of region-total CSVs.
+2. Created `scripts/phase02_s02_abares_weighting.py`: runs wheat/barley/canola, validates, prints a per-year report, exits non-zero on failure.
+3. Created `tests/test_abares_aggregation.py`: 9 tests (pure-logic weighting + RSE-gate behaviour + data-backed ±5% reconstruction per commodity). All pass.
+4. Ran the pipeline: worst graded relative error wheat 0.31%, barley 0.69%, canola 3.35% — all within ±5%. Wrote three `data/processed/abares/<commodity>_region_totals.csv` (gitignored, 1114 rows each). Weighting identity independently verified 1114/1114 exact.
+
+**New data-quality rule — survey-reliability RSE gate (Kota-approved):** A year is graded against the ±5% tolerance only if it has full 32-region coverage AND the FDP national production RSE ≤ 20%. Motivation: the exit criterion's "survey-error tolerance" must not be applied to years whose survey error is itself extreme. Empirical trigger: early canola (1990–1993) has national production RSE 22–88% and is integer-rounded to 1–3 t/farm, so reconstruction error reaches 16–29% from quantization + sampling noise alone; from 1994 on, RSE ≤ 15% and reconstruction error ≤ 3.4%. The gate excludes 1990–1993 for canola (1990–91 are also partial-coverage), leaving 31 graded canola years. Constant `RSE_GATE_THRESHOLD = 20.0` in `abares_aggregation.py`.
+
+**Finding — crop-specific reliable yield window:** wheat and barley reconstruct reliably across 1990+, but canola's reliable window effectively begins 1994. This refines scope §3.3 (currently "FDP earliest = 1990"). Scope treatment (patch v5.1 vs methodology.md note) is deferred to the Phase 02 closure ceremony, where all Phase 02 findings are reconciled together.
+
+**Dependencies:** none new (`pytest` was added at s01).
+
+**Scope:** No revision at this step; scope stays v5. Candidate refinements (crop-specific yield window; `Population` denominator decision; RSE-gate methodology) are logged here for the Phase 02 closure decision.
+
+**Impact:** Task B complete — the per-typical-farm -> region-total weighting pipeline is built, tested, and validated within ±5% for wheat, barley, and canola; region-total CSVs persisted. Unblocks Pillar 3–5 analyses that need region-total production/area (yield_t_ha was already usable). Next in Phase 02: the deferred `cross_check_aagis_region_names` remediation and/or the cross-validation tasks (C grid-vs-region SILO, D OpenWeather–SILO, E ACORN-SAT coverage).
+
+## 2026-07-15 — Phase 02, Step 03: cross_check_aagis_region_names remediation
+
+**Context:** Discharges the deferred Phase 01 latent-bug fix flagged in the s01 entry. `src/ingestion/abares.py::cross_check_aagis_region_names` selected its region field by substring match on "aagis"/"region"; given the actual GeoPackage columns [aagis, class, name, zone] it picked the numeric CODE column `aagis` and compared codes against FDP names, always reporting n_matching = 0 — it never validated name equality. Non-blocking; recorded at s01, remediated here as its own small step per PROJECT_WORKFLOW §2.3. Branch `phase-02-quality-and-crossvalidation`.
+
+**Adaptive override / fix (PROJECT_WORKFLOW §4.2):**
+- Original behaviour: substring field selection resolved to the numeric `aagis` code column.
+- Fix: prefer a known name field (`name`, `aagisname`, `aagis_name`, `region_name`, `region`); otherwise fall back to the first non-numeric text column; never a numeric code column. The dict return-value contract (keys) is unchanged, so the s06 orchestrator that consumes this helper is unaffected.
+
+**Actions:**
+
+1. Edited `cross_check_aagis_region_names` field-selection logic (src/ingestion/abares.py).
+2. Created `tests/test_abares_region_name_check.py`: locks `aagis_field_used == "name"`, 32/32 name matches, zero orphans on the real data (skips if data absent).
+3. Ran: new regression test PASS; full suite 14 passed (no existing test broke).
+
+**Dependencies:** none new.
+
+**Scope:** No revision. Code-level correctness fix; scope stays v5.
+
+**Impact:** The Phase 01 name-equality diagnostic now works correctly and agrees with the s01 `region_aggregation.validate_region_mapping` result (32/32, zero orphans). Deferred debt cleared. Remaining Phase 02: cross-validation tasks C (grid-vs-region SILO), D (OpenWeather–SILO), E (ACORN-SAT coverage), then the closure ceremony.
+
+## 2026-07-16 — Phase 02, Step 04a: SILO grid -> AAGIS region means + Phase 01 s04 lat-flip fix (Task C, part 1)
+
+**Context:** Task C part 1 (scope v5 §4.2, §6.2; phase01_summary §4.2): aggregate the cropping-masked SILO climate grid to AAGIS-region climatologies for the grid-vs-region consistency check. Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables (s04a):**
+
+1. `src/processing/silo_region_aggregation.py` — cropping-cell -> AAGIS-region assignment (geopandas point-in-polygon, cached parquet); cos(lat) area-weighted region means; single-pass annual + monthly-climatology aggregation.
+2. `scripts/phase02_s04a_silo_region_means.py` — orchestrator (coverage report + 1991-2020 reference-period aggregation).
+3. `tests/test_silo_region_aggregation.py`, `tests/test_silo_masking.py`.
+4. Gitignored outputs: `silo_cell_region_map.parquet` (28,577 cells), `silo_region_means/annual_1991_2020.csv` (5,400 rows), `monthly_climatology_1991_2020.csv` (2,160 rows).
+
+**Cell-region coverage:** 28,721 t005 cropping cells -> 28,577 assigned (99.5%; 144 near-coast cells outside all regions); 30/32 regions covered (the 2 uncovered are Pastoral: WA Kimberley, NT Alice Springs). Every broadacre (Wheat-Sheep / High-Rainfall) region covered; cell counts concentrate in the wheat belt (WA 521: 4,442; NSW 121: 3,368; ...), matching Australian broadacre geography.
+
+**MAJOR finding — Phase 01 s04 latitude-flip masking bug (discovered at s04a, fixed):**
+- **Symptom:** under correct coordinate-based sampling only 7.9% of cropping cells carried SILO data; WA/SA/VIC/TAS wheat-belt regions were ~0% valid; Tasmania all-NaN.
+- **Root cause:** `src/ingestion/silo.py` applied the mask via `mask.assign_coords(lat=da_raw["lat"].values)` — a POSITIONAL coordinate substitution. The mask is latitude-descending (cropping_mask.py `np.linspace(-10, -44)`) while SILO data is ascending, so the substitution flipped the mask north-south. Cropping cells were masked at their latitude mirror (WA wheat-belt -> Pilbara, Tasmania -> tropical ocean) and the true cropping cells' climate was set to NaN. The flipped values looked plausible (WA sampled arid Pilbara, ~288 mm / 33 degC), which is why it evaded notice until the region-level cross-check.
+- **Fix:** replace positional `assign_coords` with coordinate-value `reindex(..., method="nearest", tolerance=0.025)`; add `_assert_masking_sane` guard (latitude-centroid check, fail-fast on any flip); add synthetic regression tests (`tests/test_silo_masking.py`). The s04a aggregation resolves grid indices by coordinate value (`resolve_cell_grid_indices`), robust to axis ordering.
+- **Remediation:** deleted the flipped processed SILO; re-ran `phase01_s04` (re-download raw + re-mask, guard active, 375 files, 0 errors, 13.38 GB) on 2026-07-15/16; re-ran s04a.
+- **Verification:** post-fix all 6 variables cover all 30 regions (5,400 annual rows), zero NaN, zero spurious rain=0; region climatologies plausible and geographically correct (WA wheat-belt 403 mm / 24.1 degC; TAS 656 mm / 16.9 degC; latitude-consistent temperature gradient). Full suite: 23 passed, including the TAS alignment guard that fails on flipped data.
+
+**Discipline note:** this is exactly the class of data-integrity error Phase 02 (Data Quality & Cross-Validation) exists to catch, found before any Pillar 1-2 analysis was built on it. Post-masking spatial validation should have existed in Phase 01 s04; it now does.
+
+**Adaptive override (PROJECT_WORKFLOW §4.2):** the s04a plan (aggregate existing masked SILO) changed mid-execution upon discovering the upstream masking flip; the plan expanded to include the Phase 01 s04 fix + full SILO regeneration before the aggregation could be trusted.
+
+**Dependencies:** none new.
+
+**Scope:** no revision at this step; scope stays v5. The Phase 01 s04 masking correction and the new masking guard are candidates for a methodology.md note (and possibly scope patch v5.1) at the Phase 02 closure ceremony. The Phase 01 tag `v0.1-phase01-complete` is not re-cut: the corrected artifact is gitignored regenerable data, and the code fix is committed within Phase 02.
+
+**Impact:** s04a complete — validated, area-weighted SILO region climatologies persisted; a Phase 01 latitude-flip data bug corrected across the full SILO archive (13.38 GB). Unblocks s04b (grid-vs-region consistency write-up) and the Pillar 1-2 climate pipeline. Next: s04b consistency documentation; then Task D (OpenWeather-SILO) and Task E (ACORN-SAT coverage).
+
+## 2026-07-17 — Phase 02, Step 04b: grid-vs-region SILO aggregation consistency check (Task C, part 2)
+
+**Context:** completes the grid-vs-region consistency check (scope v5 §4.2, §6.2), building on the s04a region climatologies (and the s04a-fixed SILO data). Per the Phase 02 decision criteria, INTERNAL consistency is the primary/load-bearing check (reproducible from committed code + regenerable data); a BoM station comparison (observed, cited) is a supporting EXTERNAL plausibility check. Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables:**
+
+1. `src/processing/climate_consistency.py` — internal-consistency battery + external BoM comparison.
+2. `scripts/phase02_s04b_grid_region_consistency.py` — orchestrator (exit 1 on internal failure).
+3. `tests/test_climate_consistency.py` (4 synthetic + 1 data-backed).
+4. `outputs/tables/s04b_region_climatology_summary.csv`, `outputs/tables/s04b_external_comparison.csv` (committed small public tables).
+
+**Internal consistency (primary) — all pass, 20 broadacre regions:**
+- Coverage: every broadacre region present for all 6 variables; zero NaN; zero spurious zero-rain.
+- Temperature-latitude: corr(latitude, tmax) = +0.887, corr(latitude, tmin) = +0.938 (further south -> cooler), confirming area-weighting preserves the latitudinal temperature structure.
+- Rainfall seasonality regime: SW/southern Mediterranean regions (WA 521/522/531, SA 421) winter-dominant; subtropical/monsoon northern regions (QLD 322/331/332, NSW 121, NT 713/714) summer-dominant — reproduces the continental winter->summer rainfall gradient (WA 521 winter 54% / summer 19%; QLD 322 summer 54% / winter 19%; NT 713/714 summer 71-77%).
+
+**External plausibility (secondary; BoM normals, cited):**
+- VIC Mallee (221) vs Mildura: rain 308 vs 278 mm; tmax 23.8 vs 23.8 degC.
+- WA Wheat Belt (521) vs Merredin: rain 402 vs 310 mm (region spans wetter south Katanning ~480 to drier east Merredin ~310); tmax 24.1 vs 25.4.
+- NSW Riverina (123) vs Wagga Wagga: rain 469 vs 614 mm (region mean between drier west Hay ~365 and wetter east Wagga 614); tmax 23.2 vs 22.5.
+- tmax within +-3 degC and rainfall within region-vs-point tolerance for all anchors. Sources: BoM "Climate statistics for Australian locations" (Mildura 076031, Merredin 010092, Wagga 072150).
+
+**Decision-criteria note:** internal (reproducible) primary, external (observed BoM, cited) secondary — per the Phase 02 criteria discussion. `matplotlib` not added (scope earmarks it for Phase 03 EDA); a seasonality figure is deferred to Phase 03. The narrative will be consolidated into the data quality report at Phase 02 closure.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5.
+
+**Impact:** Task C complete — grid-vs-region aggregation consistency confirmed (internal quantitative battery + external BoM plausibility) and documented in `outputs/tables`. The corrected SILO region climatologies are trustworthy inputs for Pillars 1-2. Remaining Phase 02: Task D (OpenWeather-SILO comparison), Task E (ACORN-SAT coverage), then closure.
+
+## 2026-07-17 — Phase 02, Step 05: ACORN-SAT coverage impact assessment (Task E)
+
+**Context:** Task E (scope v5 §4.2, §12.2; phase01_summary §4.2, finding #5). Quantifies the impact of the 18 unavailable ACORN-SAT stations on regional SILO validation. ACORN-SAT is the homogenised station truth used to sanity-check SILO grids; a broadacre region with no available station can only be validated indirectly. Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables:**
+
+1. `src/processing/acornsat_coverage.py` — station load + availability, point-in-polygon assignment to AAGIS regions, per-region coverage counts + broadacre under-representation flags.
+2. `scripts/phase02_s05_acornsat_coverage.py` — orchestrator.
+3. `tests/test_acornsat_coverage.py` (2 synthetic + 1 data-backed).
+4. `outputs/tables/s05_acornsat_region_coverage.csv` (committed).
+
+**Method:** 112 ACORN-SAT stations (94 available / 18 unavailable per `bom_acornsat.ACORN_SAT_UNAVAILABLE_STATIONS`) assigned by point-in-polygon to AAGIS regions; per-region available/unavailable counts; broadacre (Wheat-Sheep / High-Rainfall) regions flagged no_station (0 available) or sparse (1 available).
+
+**Findings:**
+- 9 stations fall outside all AAGIS regions (remote islands / offshore) and are excluded; 86 available + 17 unavailable land in mainland regions.
+- 20 broadacre regions, 51 available stations among them.
+- **Broadacre region with NO available station:** QLD Eastern Darling Downs (321) — SILO there is validated only indirectly.
+- **Sparse (single available station):** NSW Central West (122), VIC Wimmera (222), VIC Central North (223), WA South West Coastal (531).
+- **Broadacre-relevant unavailable stations (lost truth):** 008039 Dalwallinu -> 522 WA Northern & Eastern Wheat Belt; 008051 Geraldton -> 521 WA Central & Southern Wheat Belt; 073054 Wyalong -> 122 NSW Central West. NSW Central West (122) is doubly affected (sparse AND lost Wyalong). Note: the bom_acornsat comment labelled Wyalong "NSW Riverina"; the actual polygon assignment is 122 NSW Central West — the code comment was approximate.
+
+**Assessment:** ACORN-SAT coverage of broadacre regions is generally adequate, but SILO-validation confidence is lower for QLD Eastern Darling Downs (no station) and the four sparse regions; the 18 unavailable stations remove station truth from the WA Wheatbelt (521/522) and NSW Central West (122). Documented, not a blocker — downstream SILO-based indicators in these regions carry a validation caveat.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5. Finding #5's "3 broadacre-relevant" unavailable stations are confirmed; the Wyalong region-label refinement (Central West, not Riverina) is a minor factual note, candidate for a methodology.md note at closure.
+
+**Impact:** Task E complete — ACORN-SAT station coverage per AAGIS region documented, broadacre under-representation flagged. Phase 02 cross-validation tasks C and E done; remaining: Task D (OpenWeather-SILO comparison), then the closure ceremony.
+
+## 2026-07-17 — Phase 02, Step 06: OpenWeather vs SILO comparison study (Task D; scope §5.6.4)
+
+**Context:** Task D — auxiliary methodological side-finding (Pillar 6; scope v5 §5.6.4). Quantifies OpenWeather day-summary API vs gold-standard SILO agreement at the 10 sampled AAGIS centroids over 2022-2024 (1,096 paired days per centroid; 10,960 per variable). Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables:**
+
+1. `src/processing/openweather_silo_compare.py` — pair OW daily with SILO at the nearest cropping cell; tmax/tmin/rain direct, humidity via SILO-derived RH (Tetens); RMSE / bias(OW-SILO) / Pearson correlation per centroid x variable + pooled.
+2. `scripts/phase02_s06_openweather_silo.py`.
+3. `tests/test_openweather_silo_compare.py` (5 synthetic + 1 data-backed).
+4. `outputs/tables/s06_openweather_silo_metrics.csv` (40 rows = 4 variables x 10 centroids).
+
+**SILO extraction:** the masked SILO archive keeps only cropping cells, so SILO is sampled at the nearest cropping cell to each centroid. Offset < 5 km for 8 centroids, 17.5 km for 322, and 66.7 km for 631 (Tasmania — sparse Tasmanian cropping; flagged, and its comparison is correspondingly weaker).
+
+**Results (pooled, bias = OpenWeather - SILO):**
+- tmax: corr 0.97, RMSE 1.9 degC, bias -0.98 (OW slightly cool).
+- tmin: corr 0.92, RMSE 2.6 degC, bias +0.92 (OW slightly warm). Together the API compresses the diurnal range by ~1-2 degC vs SILO.
+- rain: corr 0.33, RMSE 4.8 mm, bias -0.10 — LOW DAILY correlation (point API vs 5 km grid placement/timing mismatch) but negligible bias (totals agree).
+- humidity (SILO-derived RH, Tetens approximation): corr 0.84, RMSE 10.4 %, bias +1.0 — moderate; carries the derivation caveat (SILO ships vapour pressure; afternoon temperature proxied by the daily maximum).
+- Per-centroid temperature correlations 0.90-0.99; the TAS centroid (631) is the weakest (tmin corr 0.81, humidity corr 0.59), consistent with its 67 km SILO offset.
+
+**Finding (scope §5.6.4):** OpenWeather is a usable temperature proxy (high correlation, ~2 degC RMSE, small diurnal-range compression) but NOT a substitute for SILO on daily rainfall (low daily correlation, though unbiased). This supports the project design: SILO is the primary gold-standard climate input; OpenWeather is a validation comparator only, never a training input.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; the §5.6.4 auxiliary result is now populated with concrete metrics (previously a placeholder).
+
+**Impact:** Task D complete. All Phase 02 reconciliation (A, B) and cross-validation (C, D, E) tasks are done. Remaining Phase 02: the closure ceremony — data quality report (`docs/phase_summaries/phase02_summary.md`), manifest/methodology updates, scope-revision decision, and the git merge + tag.
+
+## 2026-07-17 — Phase 02, Step 07: Phase 02 closure ceremony
+
+**Context:** All Phase 02 tasks complete (A, B reconciliation; C, D, E cross-validation; F, G, H deferred to Phase 03/04/09). Executing the closure ceremony (PROJECT_WORKFLOW §9).
+
+**Actions:**
+
+1. **Scope revision v5 → v5.1 (patch):** §3.3 refined — canola reliable yield window begins 1994 (RSE-gate finding); wheat/barley remain 1990+. Appendix C history row added; header version + date bumped. Other Phase 02 methods recorded in methodology.md §7 and phase02_summary.md (not accumulated inline in scope).
+2. **methodology.md §7 populated:** region mapping (Task A), Population weighting + RSE gate (Task B), SILO masking latitude-flip fix + guard (Task C), grid-vs-region consistency (Task C), ACORN-SAT coverage (Task E), OpenWeather–SILO (Task D).
+3. **data/raw/manifest.yaml:** scope_version -> v5.1; new `phase02_processed_products` section (region_mapping, abares region-totals, silo cell-region map, silo region means) + committed output tables.
+4. **docs/phase_summaries/phase02_summary.md** created (data quality report / Phase 03 handoff; gitignored).
+5. **PROJECT_LOG.md:** s01–s06 step entries + this closure entry.
+6. **Git ceremony (to execute):** closure commit on `phase-02-quality-and-crossvalidation`; `--no-ff` merge to `main`; annotated tag `v0.2-phase02-complete`; push `main` + tags.
+
+**Phase 02 deliverables:** 6 processing modules, 6 orchestrator scripts, 7 test files (37 tests passing), 4 committed output tables, 4 gitignored regenerable data products. 2 code fixes (silo.py masking flip + `_assert_masking_sane` guard; abares.py `cross_check` field selection). 1 dev dependency (pytest). 8 commits on the phase branch before closure.
+
+**Headline finding:** the Phase 01 s04 SILO masking latitude-flip bug was discovered at s04a and fixed; the full 12 GB SILO archive was regenerated correctly — the data-quality process caught it before any Pillar analysis was built on it.
+
+**Appendix A discipline scorecard (Phase 02 close — all ✓):**
+- Observed-vs-derived — SILO/BoM observed; OpenWeather comparator only; no model-as-truth. ✓
+- Empirical honesty — SILO flip, cross_check bug, canola window reconciled into scope v5.1 / methodology / log, not hidden. ✓
+- Adaptive overrides — logged as discrete entries (Population denominator, RSE gate, flip fix). ✓
+- Empirical verification before creation — field/structure inspected before every module. ✓
+- Reproducibility — fresh clone reproduces via scripts (SILO re-download caveat acknowledged). ✓
+- First-use dependency rule — pytest added at s01. ✓
+- Idempotent atomic persistence — all writers use `.part` -> rename. ✓
+- Manifest as source of truth — phase02_processed_products added. ✓
+- Scope discipline — v5 -> v5.1 patch (not accumulated inline). ✓
+- Git per-phase branching — `--no-ff` merge preserves structure. ✓
+- Annotated tag with substance — `v0.2-phase02-complete`. ✓
+- Bilingual discipline — English artefacts, Japanese conversation, no mixing. ✓
+
+**Impact:** Phase 02 COMPLETE. Analysis-ready, cross-validated inputs for Pillars 1–6, with an important Phase 01 data-integrity bug corrected. Phase 03 (Exploratory Analysis) is enabled from a clean, documented, reproducible state at tag `v0.2-phase02-complete`.

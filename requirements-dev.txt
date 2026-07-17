@@ -20,3 +20,6 @@ ruff>=0.7
 
 # --- Pre-commit orchestration ---
 pre-commit>=4.0
+
+# --- Testing (Phase 02 s01: region-mapping validation tests) ---
+pytest>=8.0

@@ -1,0 +1,33 @@
+aagis_code,region_name,zone,n_available,n_unavailable,n_total,is_broadacre,no_station,sparse
+321,QLD Eastern Darling Downs,Wheat Sheep,0,0,0,True,True,False
+122,NSW Central West,Wheat Sheep,1,1,2,True,False,True
+222,VIC Wimmera,Wheat Sheep,1,0,1,True,False,True
+223,VIC Central North,Wheat Sheep,1,0,1,True,False,True
+531,WA South West Coastal,High Rainfall,1,2,3,True,False,True
+123,NSW Riverina,Wheat Sheep,2,0,2,True,False,False
+221,VIC Mallee,Wheat Sheep,2,0,2,True,False,False
+322,QLD Western Downs and Central Highlands,Wheat Sheep,2,0,2,True,False,False
+422,SA Murray Lands and Yorke Peninsula,Wheat Sheep,2,0,2,True,False,False
+431,SA South East,High Rainfall,2,1,3,True,False,False
+522,WA Northern and Eastern Wheat Belt,Wheat Sheep,2,1,3,True,False,False
+121,NSW North West Slopes and Plains,Wheat Sheep,3,0,3,True,False,False
+231,VIC Southern and Eastern Victoria,High Rainfall,3,1,4,True,False,False
+332,QLD Northern Coastal - Mackay to Cairns,High Rainfall,3,0,3,True,False,False
+421,SA Eyre Peninsula,Wheat Sheep,3,0,3,True,False,False
+521,WA Central and Southern Wheat Belt,Wheat Sheep,3,2,5,True,False,False
+631,TAS Tasmania,High Rainfall,4,1,5,True,False,False
+131,NSW Tablelands (Northern Central and Southern),High Rainfall,5,0,5,True,False,False
+331,QLD Southern Coastal - Curtis to Moreton,High Rainfall,5,0,5,True,False,False
+132,NSW Coastal,High Rainfall,6,2,8,True,False,False
+712,NT Barkly Tablelands,Pastoral,1,0,1,False,False,False
+713,NT Victoria River District - Katherine,Pastoral,1,0,1,False,False,False
+714,NT Top End Darwin,Pastoral,1,0,1,False,False,False
+111,NSW Far West,Pastoral,2,2,4,False,False,False
+313,QLD Central North,Pastoral,2,1,3,False,False,False
+511,WA The Kimberley,Pastoral,2,1,3,False,False,False
+711,NT Alice Springs Districts,Pastoral,2,0,2,False,False,False
+314,QLD Charleville - Longreach,Pastoral,3,0,3,False,False,False
+411,SA Northern Pastoral,Pastoral,3,1,4,False,False,False
+312,QLD West and South West,Pastoral,4,0,4,False,False,False
+311,QLD Cape York and the Gulf,Pastoral,5,0,5,False,False,False
+512,WA Pilbara and Central Pastoral,Pastoral,9,1,10,False,False,False
