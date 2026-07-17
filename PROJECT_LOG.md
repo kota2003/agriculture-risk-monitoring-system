@@ -851,3 +851,31 @@ documented rather than retroactively justified.
 **Scope:** no revision; scope stays v5. Finding #5's "3 broadacre-relevant" unavailable stations are confirmed; the Wyalong region-label refinement (Central West, not Riverina) is a minor factual note, candidate for a methodology.md note at closure.
 
 **Impact:** Task E complete — ACORN-SAT station coverage per AAGIS region documented, broadacre under-representation flagged. Phase 02 cross-validation tasks C and E done; remaining: Task D (OpenWeather-SILO comparison), then the closure ceremony.
+
+## 2026-07-17 — Phase 02, Step 06: OpenWeather vs SILO comparison study (Task D; scope §5.6.4)
+
+**Context:** Task D — auxiliary methodological side-finding (Pillar 6; scope v5 §5.6.4). Quantifies OpenWeather day-summary API vs gold-standard SILO agreement at the 10 sampled AAGIS centroids over 2022-2024 (1,096 paired days per centroid; 10,960 per variable). Branch `phase-02-quality-and-crossvalidation`.
+
+**Deliverables:**
+
+1. `src/processing/openweather_silo_compare.py` — pair OW daily with SILO at the nearest cropping cell; tmax/tmin/rain direct, humidity via SILO-derived RH (Tetens); RMSE / bias(OW-SILO) / Pearson correlation per centroid x variable + pooled.
+2. `scripts/phase02_s06_openweather_silo.py`.
+3. `tests/test_openweather_silo_compare.py` (5 synthetic + 1 data-backed).
+4. `outputs/tables/s06_openweather_silo_metrics.csv` (40 rows = 4 variables x 10 centroids).
+
+**SILO extraction:** the masked SILO archive keeps only cropping cells, so SILO is sampled at the nearest cropping cell to each centroid. Offset < 5 km for 8 centroids, 17.5 km for 322, and 66.7 km for 631 (Tasmania — sparse Tasmanian cropping; flagged, and its comparison is correspondingly weaker).
+
+**Results (pooled, bias = OpenWeather - SILO):**
+- tmax: corr 0.97, RMSE 1.9 degC, bias -0.98 (OW slightly cool).
+- tmin: corr 0.92, RMSE 2.6 degC, bias +0.92 (OW slightly warm). Together the API compresses the diurnal range by ~1-2 degC vs SILO.
+- rain: corr 0.33, RMSE 4.8 mm, bias -0.10 — LOW DAILY correlation (point API vs 5 km grid placement/timing mismatch) but negligible bias (totals agree).
+- humidity (SILO-derived RH, Tetens approximation): corr 0.84, RMSE 10.4 %, bias +1.0 — moderate; carries the derivation caveat (SILO ships vapour pressure; afternoon temperature proxied by the daily maximum).
+- Per-centroid temperature correlations 0.90-0.99; the TAS centroid (631) is the weakest (tmin corr 0.81, humidity corr 0.59), consistent with its 67 km SILO offset.
+
+**Finding (scope §5.6.4):** OpenWeather is a usable temperature proxy (high correlation, ~2 degC RMSE, small diurnal-range compression) but NOT a substitute for SILO on daily rainfall (low daily correlation, though unbiased). This supports the project design: SILO is the primary gold-standard climate input; OpenWeather is a validation comparator only, never a training input.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; the §5.6.4 auxiliary result is now populated with concrete metrics (previously a placeholder).
+
+**Impact:** Task D complete. All Phase 02 reconciliation (A, B) and cross-validation (C, D, E) tasks are done. Remaining Phase 02: the closure ceremony — data quality report (`docs/phase_summaries/phase02_summary.md`), manifest/methodology updates, scope-revision decision, and the git merge + tag.
