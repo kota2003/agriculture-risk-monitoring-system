@@ -226,14 +226,35 @@ Phase notebooks execute top-to-bottom on a fresh kernel without error. Every fig
 
 ## 7. Phase 02 — Data Quality & Cross-Validation
 
-*Placeholder — this section will be populated at Phase 02 completion. Planned content:*
+Phase 02 reconciled Phase 01's raw data into analysis-ready inputs and cross-validated the sources before any Pillar analysis. Modules live in `src/processing/`; each is driven by a `scripts/phase02_s0X_*.py` orchestrator and covered by tests.
 
-- Grid-vs-region SILO aggregation consistency check methodology.
-- OpenWeather–SILO agreement metrics (RMSE, bias, correlation) at the 10 sampled centroids.
-- AAGIS 3-digit code ↔ FDP text name mapping table construction.
-- ABARES per-typical-farm ↔ region-total farm-count weighting implementation.
-- Cropping-mask threshold sensitivity comparison (t005 vs t010 vs t020).
-- ACORN-SAT 18-station-unavailable coverage impact assessment on broadacre-region SILO validation.
+### 7.1 Region-key mapping (Task A)
+
+The AAGIS GeoPackage carries both a 3-digit `class` code and a text `name`; the `name` values match the ABARES FDP `ABARES region` column exactly (32/32, zero orphans). The mapping (`region_aggregation.py`) is therefore read directly from the shapefile and validated (code well-formedness, `aagis == class` redundancy, state-prefix sanity, and name-set equality with the FDP). A latent Phase 01 diagnostic bug — `cross_check_aagis_region_names` selected the numeric code column instead of `name`, so it never validated name equality — was fixed (s03).
+
+### 7.2 Per-typical-farm → region-total weighting (Task B)
+
+ABARES FDP `Value` columns are per-typical-farm averages (Phase 01 finding #2). Extensive quantities (sown area, production) are converted to region totals by multiplying by the FDP **`Population`** variable (the survey's estimate of broadacre farms per region-year); `yield_t_ha` needs no weighting. `Population` was chosen over ABS Census SA2 counts because it is region-native, per-year, and internally exact: Σ_region(per-farm × Population) reconstructs the FDP national total to ratio 0.999–1.001.
+
+**Survey-reliability RSE gate.** The ±5% reconstruction check is applied only to full-coverage years whose FDP national production RSE ≤ 20%. This operationalises the "survey-error tolerance" qualifier: early canola (1990–1993, RSE 22–88%, integer-rounded to 1–3 t/farm) is excluded. Consequently **canola's reliable yield window begins 1994** (wheat/barley 1990+; scope v5.1 §3.3).
+
+### 7.3 SILO grid → region aggregation and the masking-flip fix (Task C)
+
+Region climatologies are cos(latitude)-area-weighted means over each region's cropping cells (`silo_region_aggregation.py`); cell→region assignment is a cached point-in-polygon join, and grid indices are resolved by coordinate value (robust to axis ordering).
+
+**Phase 01 s04 latitude-flip bug (found and fixed here).** `silo.py` had applied the cropping mask via a positional `assign_coords`; because the mask is latitude-descending and SILO data ascending, the mask was flipped north-south (only 7.9% of cropping cells retained data — WA wheat-belt sampled the Pilbara, Tasmania the tropical ocean). The fix aligns the mask by coordinate value (`reindex(method="nearest")`) and adds an `_assert_masking_sane` guard (latitude-centroid check, fail-fast). The full SILO archive (375 files, 13.38 GB) was regenerated from source.
+
+### 7.4 Grid-vs-region consistency check (Task C, s04b)
+
+Primary check is INTERNAL and fully reproducible: coverage/no-NaN, strong temperature–latitude correlation (corr(lat, tmax) = +0.887, tmin = +0.938), and the correct rainfall seasonality regime (Mediterranean-south winter-dominant → subtropical/monsoon-north summer-dominant). A SECONDARY external plausibility check compares region means to representative BoM station normals (Mildura, Merredin, Wagga; cited) — a region mean is expected to fall within the spread of in-region stations, not equal any one.
+
+### 7.5 ACORN-SAT coverage impact (Task E)
+
+The 112 ACORN-SAT stations (94 available / 18 unavailable) are assigned to AAGIS regions; broadacre regions with zero or a single available station are flagged as under-represented for direct SILO validation. QLD Eastern Darling Downs has no available station; four regions are sparse. The three broadacre-relevant unavailable stations degrade WA Wheatbelt (521/522) and NSW Central West (122).
+
+### 7.6 OpenWeather–SILO comparison (Task D; scope §5.6.4)
+
+Daily OpenWeather day-summary records are paired with SILO at the nearest cropping cell to each of the 10 centroids (2022–2024); tmax/tmin/rain compared directly, humidity via SILO-derived RH (Tetens, approximate). Bias = OpenWeather − SILO. OpenWeather tracks SILO temperature well (tmax corr 0.97, RMSE 1.9 °C; tmin corr 0.92, RMSE 2.6 °C; ~1–2 °C diurnal-range compression) but daily rainfall agreement is weak (corr 0.33) though unbiased — supporting SILO as the primary climate input and OpenWeather as a validation comparator only.
 
 ---
 

@@ -879,3 +879,36 @@ documented rather than retroactively justified.
 **Scope:** no revision; the §5.6.4 auxiliary result is now populated with concrete metrics (previously a placeholder).
 
 **Impact:** Task D complete. All Phase 02 reconciliation (A, B) and cross-validation (C, D, E) tasks are done. Remaining Phase 02: the closure ceremony — data quality report (`docs/phase_summaries/phase02_summary.md`), manifest/methodology updates, scope-revision decision, and the git merge + tag.
+
+## 2026-07-17 — Phase 02, Step 07: Phase 02 closure ceremony
+
+**Context:** All Phase 02 tasks complete (A, B reconciliation; C, D, E cross-validation; F, G, H deferred to Phase 03/04/09). Executing the closure ceremony (PROJECT_WORKFLOW §9).
+
+**Actions:**
+
+1. **Scope revision v5 → v5.1 (patch):** §3.3 refined — canola reliable yield window begins 1994 (RSE-gate finding); wheat/barley remain 1990+. Appendix C history row added; header version + date bumped. Other Phase 02 methods recorded in methodology.md §7 and phase02_summary.md (not accumulated inline in scope).
+2. **methodology.md §7 populated:** region mapping (Task A), Population weighting + RSE gate (Task B), SILO masking latitude-flip fix + guard (Task C), grid-vs-region consistency (Task C), ACORN-SAT coverage (Task E), OpenWeather–SILO (Task D).
+3. **data/raw/manifest.yaml:** scope_version -> v5.1; new `phase02_processed_products` section (region_mapping, abares region-totals, silo cell-region map, silo region means) + committed output tables.
+4. **docs/phase_summaries/phase02_summary.md** created (data quality report / Phase 03 handoff; gitignored).
+5. **PROJECT_LOG.md:** s01–s06 step entries + this closure entry.
+6. **Git ceremony (to execute):** closure commit on `phase-02-quality-and-crossvalidation`; `--no-ff` merge to `main`; annotated tag `v0.2-phase02-complete`; push `main` + tags.
+
+**Phase 02 deliverables:** 6 processing modules, 6 orchestrator scripts, 7 test files (37 tests passing), 4 committed output tables, 4 gitignored regenerable data products. 2 code fixes (silo.py masking flip + `_assert_masking_sane` guard; abares.py `cross_check` field selection). 1 dev dependency (pytest). 8 commits on the phase branch before closure.
+
+**Headline finding:** the Phase 01 s04 SILO masking latitude-flip bug was discovered at s04a and fixed; the full 12 GB SILO archive was regenerated correctly — the data-quality process caught it before any Pillar analysis was built on it.
+
+**Appendix A discipline scorecard (Phase 02 close — all ✓):**
+- Observed-vs-derived — SILO/BoM observed; OpenWeather comparator only; no model-as-truth. ✓
+- Empirical honesty — SILO flip, cross_check bug, canola window reconciled into scope v5.1 / methodology / log, not hidden. ✓
+- Adaptive overrides — logged as discrete entries (Population denominator, RSE gate, flip fix). ✓
+- Empirical verification before creation — field/structure inspected before every module. ✓
+- Reproducibility — fresh clone reproduces via scripts (SILO re-download caveat acknowledged). ✓
+- First-use dependency rule — pytest added at s01. ✓
+- Idempotent atomic persistence — all writers use `.part` -> rename. ✓
+- Manifest as source of truth — phase02_processed_products added. ✓
+- Scope discipline — v5 -> v5.1 patch (not accumulated inline). ✓
+- Git per-phase branching — `--no-ff` merge preserves structure. ✓
+- Annotated tag with substance — `v0.2-phase02-complete`. ✓
+- Bilingual discipline — English artefacts, Japanese conversation, no mixing. ✓
+
+**Impact:** Phase 02 COMPLETE. Analysis-ready, cross-validated inputs for Pillars 1–6, with an important Phase 01 data-integrity bug corrected. Phase 03 (Exploratory Analysis) is enabled from a clean, documented, reproducible state at tag `v0.2-phase02-complete`.
