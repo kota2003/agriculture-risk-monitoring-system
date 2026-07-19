@@ -1,0 +1,15 @@
+product,location,path,exists,n_rows,n_cols,expected_rows,row_ok,columns
+region_mapping,processed,region_mapping.csv,True,32,4,32.0,True,aagis_code;region_name;zone;state
+wheat,processed,abares/wheat.csv,True,1114,7,1114.0,True,region;year;area_ha;production_t;yield_t_ha;area_rse;production_rse
+barley,processed,abares/barley.csv,True,1114,7,1114.0,True,region;year;area_ha;production_t;yield_t_ha;area_rse;production_rse
+canola,processed,abares/canola.csv,True,1114,7,1114.0,True,region;year;area_ha;production_t;yield_t_ha;area_rse;production_rse
+wheat_totals,processed,abares/wheat_region_totals.csv,True,1114,6,1114.0,True,region;year;population;area_total_ha;production_total_t;yield_t_ha
+barley_totals,processed,abares/barley_region_totals.csv,True,1114,6,1114.0,True,region;year;population;area_total_ha;production_total_t;yield_t_ha
+canola_totals,processed,abares/canola_region_totals.csv,True,1114,6,1114.0,True,region;year;population;area_total_ha;production_total_t;yield_t_ha
+silo_annual,processed,silo_region_means/annual_1991_2020.csv,True,5400,6,5400.0,True,aagis_code;region_name;value;n_cells;year;variable
+silo_monthly,processed,silo_region_means/monthly_climatology_1991_2020.csv,True,2160,6,2160.0,True,aagis_code;region_name;value;n_cells;month;variable
+silo_cell_map,processed,silo_cell_region_map.parquet,True,28577,7,28577.0,True,row;col;lat;lon;weight;aagis_code;region_name
+s04b_climatology,tables,s04b_region_climatology_summary.csv,True,30,12,30.0,True,aagis_code;region_name;daily_rain;evap_pan;max_temp;min_temp;radiation;vp;winter_share;summer_share;lat;zone
+s05_acornsat,tables,s05_acornsat_region_coverage.csv,True,32,9,,True,aagis_code;region_name;zone;n_available;n_unavailable;n_total;is_broadacre;no_station;sparse
+s06_openweather,tables,s06_openweather_silo_metrics.csv,True,40,6,40.0,True,aagis_code;variable;n;rmse;bias_ow_minus_silo;corr
+s04b_external,tables,s04b_external_comparison.csv,True,3,12,,True,aagis_code;region_name;bom_station;silo_rain_mm;bom_rain_mm;silo_tmax_c;bom_tmax_c;silo_tmin_c;bom_tmin_c;tmax_within_3C;rain_within_45pct;bom_url

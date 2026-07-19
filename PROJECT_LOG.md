@@ -912,3 +912,344 @@ documented rather than retroactively justified.
 - Bilingual discipline — English artefacts, Japanese conversation, no mixing. ✓
 
 **Impact:** Phase 02 COMPLETE. Analysis-ready, cross-validated inputs for Pillars 1–6, with an important Phase 01 data-integrity bug corrected. Phase 03 (Exploratory Analysis) is enabled from a clean, documented, reproducible state at tag `v0.2-phase02-complete`.
+
+## 2026-07-18 — Phase 03, Step 01: data inventory + EDA scaffolding
+
+**Context:** Phase 03 (Exploratory Data Analysis) kickoff. Working branch
+`phase-03-eda` created from `main` (tag `v0.2-phase02-complete`). Step 01 goal
+(scope §6.2): load the Phase 02 analysis-ready inputs, verify their shapes /
+coverage / region-key alignment, and stand up the EDA scaffold — a verified data
+baseline before any substantive EDA or the optional-crop decision.
+
+**Empirical verification before creation (PROJECT_WORKFLOW §2.4):** inspected the
+real artefacts before writing code. Findings that corrected scope Appendix A:
+- `notebooks/` was empty (only `.gitkeep`); `03_exploratory_analysis.ipynb` is the
+  project's FIRST notebook and sets the notebook conventions (kernel = `.venv`
+  3.12; executes top-to-bottom; every figure carries a one-sentence interpretation).
+- `src/viz/` held only an empty `__init__.py` (no `maps.py`, contrary to Appendix A);
+  `src/viz/style.py` is therefore new with no conflict.
+- The full masked SILO daily archive is on disk (1961–2024 for
+  tmax/tmin/rain/vp/radiation, 1970–2024 for evap_pan). A full-record region
+  re-aggregation (s02) needs NO re-download.
+- The persisted SILO region means cover the 1991–2020 reference period only
+  (`silo_region_means/annual_1991_2020.csv`) — the gap handed to s02.
+
+**Deliverables:**
+1. `src/processing/input_inventory.py` — loads the 14 Phase 02 products, records
+   shapes/columns, checks structural invariants, and (atomically) writes the
+   inventory table. Reused by the orchestrator and the notebook (src-promotion
+   per §11.6).
+2. `scripts/phase03_s01_data_inventory.py` — orchestrator; prints inventory +
+   invariants + reliable-window summary, exits non-zero on any failure.
+3. `tests/test_input_inventory.py` — 3 pure-logic + 4 data-backed tests
+   (data-backed skip if the gitignored processed data is absent).
+4. `src/viz/style.py` — project-wide matplotlib/seaborn style. Categorical =
+   Okabe-Ito (colourblind-safe, fixed order, non-cycled); sequential = single-hue
+   (cividis / YlGnBu / inferno); diverging = RdBu_r (neutral midpoint); stable
+   entity→colour maps for zones / commodities / SILO variables; `SEED = 42`.
+5. `notebooks/03_exploratory_analysis.ipynb` — EDA scaffold (16 cells): §0 setup +
+   verified inventory (executable), §1–§5 stubs for s02–s06, running caveats list.
+6. `outputs/tables/s01_input_inventory.csv` — committed inventory table.
+
+**Verification (all green):**
+- Inventory: 14 products present; row counts match (region_mapping 32; each of
+  wheat/barley/canola raw + region_totals 1,114; SILO annual 5,400; SILO monthly
+  2,160; cell-region map 28,577).
+- Invariants: 32 mapped regions; 20 broadacre regions jointly present in the yield
+  (region name) and climate (aagis_code) products; the 2 SILO-uncovered regions
+  are exactly 511 (WA The Kimberley) / 711 (NT Alice Springs), both Pastoral;
+  region names/codes subset the mapping.
+- Reliable yield windows: non-NA yields wheat 747 / barley 738 / canola 482;
+  canola carries 122 pre-1994 rows (28 with a non-NA yield) excluded by the RSE
+  gate — carried forward to s03 (yield EDA) and s05 (optional-crop decision).
+- `pytest -q`: 44 passed (37 Phase 02 + 7 new). `nbconvert --execute` runs the
+  notebook end-to-end on the `.venv` (3.12) kernel with no error.
+
+**First-use dependency rule (§11.7 / §8.2):** `matplotlib>=3.8` and `seaborn>=0.13`
+added to `requirements.txt` in the same commit as `src/viz/style.py`.
+
+**Environment note:** stray `cpython-310` `.pyc` files were observed under
+`src/__pycache__`; confirmed the active interpreter for tests and the notebook is
+the `.venv` (Python 3.12) — `nbconvert --execute` ran under `.venv`.
+
+**Scope:** no revision; scope stays v5.1. Open Phase 03 decisions logged for their
+steps: gate ① SILO re-aggregation window (s02); gate ② RSE weighting (s03,
+possibly Phase 06); Task H historical-event sanity (s04); optional-crop decision
+(s05).
+
+**Impact:** Step 01 complete — a verified, cross-checked data baseline and an
+executable EDA scaffold. Phase 03 s02 (regional climate climatology) is enabled.
+
+## 2026-07-19 — Phase 03, Step 02: full-record SILO region climatology + climate EDA
+
+**Context:** s02 (regional climate climatology). Decision gate ① resolved to option
+C — re-aggregate SILO region means over the FULL record (1961–2024; evap_pan
+1970–2024) rather than align to the yield window. The full masked daily archive
+(~13 GB) is already on disk (no re-download); the superset serves both the EDA and
+later Pillar 2 EVT reuse, and enables both WMO baselines. Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** inspected `silo_region_aggregation.py` before
+building — it applies a single year-range to all variables, always computes the
+monthly climatology in the same pass, and raises on missing files (evap_pan
+pre-1970). So an annual-only, per-variable-year-range aggregation was added that
+reuses the Phase 02 weighting core unchanged, avoiding wasted monthly recompute.
+
+**Deliverables:**
+1. `src/processing/silo_climatology.py` — annual full-record aggregation (reuses
+   `weighted_region_means` / `resolve_cell_grid_indices` / `AGG_RULE`), WMO
+   baselines (1961–1990, 1991–2020), sanity checks, loaders.
+2. `scripts/phase03_s02_silo_full_record.py` — orchestrator (pre-flight, ~30–60 min
+   single pass, sanity gate, atomic writes).
+3. `src/viz/maps.py` — reusable AAGIS choropleth (pastoral greyed for context;
+   sequential / diverging / vmax-capped scales). Reused later by Pillar 6 risk maps.
+4. `tests/test_silo_climatology.py` (6), `tests/test_maps.py` (3).
+5. `notebooks/03_exploratory_analysis.ipynb` §1 populated with 7 figures — F1/F2
+   spatial baseline choropleths, F3 seasonality, F4 rainfall small-multiples + OLS
+   trend, F5 tmax anomaly, F6 rainfall CV, F7 baseline-shift diverging maps — each
+   with a one-sentence interpretation, plus a §1.7 synthesis.
+6. `data/processed/silo_region_means/annual_1961_2024.csv` (11,250 rows; gitignored).
+7. `outputs/tables/s02_region_climate_baselines.csv` (360 rows; committed).
+8. `outputs/figures/s02_*.png` (6; committed).
+
+**Findings (descriptive; inferential testing is Pillar 2 / Phase 05):**
+- **Warming in 20/20** broadacre regions: per-region OLS +0.05..+0.26 °C/decade
+  (median +0.20); baseline-shift median +0.61 °C (up to ~+1.0 in inland QLD).
+- **Drying in 20/20**: annual-rainfall baseline shift median −6.6% (−12.7..−1.0%).
+- **Variability**: annual-rainfall CV highest in the dry interior/Mallee (VIC Mallee
+  0.31; VIC Central North / NSW Riverina ~0.29), lowest in the Mediterranean
+  south-west (WA South West Coastal 0.14; WA Wheat Belt 0.17) — drier = more variable.
+- **Seasonality**: winter-dominant south/west (aligned to winter crops),
+  summer-dominant QLD.
+
+**Verification:** aggregation sanity all pass (30 regions, 11,250 rows, 0 NaN,
+tmax>tmin, rain≥0); evap_pan 1961–1990 baseline uses 1970–1990 (n_years=21),
+documented. `pytest -q` 53 passed. `nbconvert --execute` runs the notebook
+end-to-end on `.venv` (3.12), producing the six figures.
+
+**Dependencies:** none new (matplotlib/seaborn added at s01).
+
+**Scope:** no revision; scope stays v5.1. Monthly climatology kept at 1991–2020
+(seasonality is baseline-insensitive); a 1961–1990 monthly baseline can be added if
+anomaly analysis later requires it.
+
+**Impact:** s02 complete — full-record climate climatology and the "where / when /
+how much (climate)" narrative, with a coherent whole-belt warming-and-drying signal.
+Enables s03 (yield trends & dispersion).
+
+## 2026-07-19 — Phase 03, Step 03: ABARES region-yield EDA (trends, dispersion, lower tail)
+
+**Context:** s03 (yield trends & dispersion). Decision gate ② resolved to
+**diagnostic-only**: the survey RSE is reported as a data-quality caveat, not used
+to weight the descriptive statistics; inverse-RSE weighting is deferred to the
+Phase 06 regression models. Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** inspected the ABARES processed yields before
+building — columns `region/year/area_ha/production_t/yield_t_ha/area_rse/production_rse`;
+reliable-window broadacre non-NA region-years = wheat 647 / barley 642 / canola 428
+(canola's 28 pre-1994 non-NA excluded, matching the s01 finding). Some High-Rainfall
+coastal regions are marginal croppers (1–2 yield years, CV up to ~0.85), so a
+`MIN_YEARS = 10` coverage flag was added rather than mixing them in.
+
+**Deliverables:**
+1. `src/processing/yield_stats.py` — reliable-window + broadacre load; per-region
+   descriptive statistics: mean/median, OLS trend (t/ha/decade), CV and *detrended*
+   CV, lower-tail (p10, p10/median, worst/median), median production RSE, adequacy flag.
+2. `scripts/phase03_s03_yield_summary.py` — orchestrator + committed summary table.
+3. `src/viz/maps.py` — added a hatched "no data" fill for regions missing a value
+   (sparse-coverage exclusions); reused across all choropleths.
+4. `tests/test_yield_stats.py` (7).
+5. `notebooks/03_exploratory_analysis.ipynb` §2: five figures — wheat yield trend
+   small-multiples (high-RSE years flagged), yield distribution by region,
+   detrended-CV choropleth, lower-tail p10/median, cross-crop comparison — each with
+   an interpretation, plus a §2.6 synthesis.
+6. `outputs/tables/s03_yield_region_summary.csv` (57 rows; committed).
+7. `outputs/figures/s03_*.png` (5; committed).
+
+**Findings (descriptive; inference is Pillar 3 / Phase 06):**
+- **Yields rise** in ~17/19 adequate regions per crop: wheat +0.23, barley +0.26,
+  canola +0.22 t/ha/decade — agronomic gains against the warming-and-drying climate.
+- **Downside risk is large**: a 1-in-10 year is ~45–60% of the regional median
+  (min p10/median as low as 0.06; barley has a total-failure region-year).
+- **Variability geography matches climate**: detrended yield CV lowest in the WA/SA
+  wheat-belt (~0.16–0.20), highest on the eastern/coastal margin (~0.84) — the same
+  regions as the §1 rainfall-variability map.
+- **Coverage**: wheat 19/20 adequate (QLD Northern Coastal sparse), barley 19/19,
+  canola 14/18 — canola is absent/sparse in the QLD summer-crop regions, TAS, and
+  NSW Coastal (a southern-winter-oilseed footprint relevant to the s05 optional-crop
+  decision).
+- **Cross-crop**: wheat ≈ barley median ~2.0–2.2 t/ha, canola ~1.4 (oilseed);
+  comparable detrended CV — the three behave as one broadacre system.
+
+**Verification:** `pytest -q` passes (yield_stats adds 7 → 60 total); the orchestrator
+writes the 57-row summary; `nbconvert --execute` runs the notebook end-to-end on
+`.venv` (3.12), producing the five figures.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5.1. Inverse-RSE weighting carried to Phase 06
+(gate ②).
+
+**Impact:** s03 complete — the "where / when / how much (yield)" half of the exit
+narrative: rising means but persistent lower-tail risk, concentrated in the drier,
+more climate-variable regions. Enables s04 (climate–yield joint view + historical-
+event sanity).
+
+## 2026-07-19 — Phase 03, Step 04: climate × yield linkage + historical-event sanity
+
+**Context:** s04. Decision gate ③ resolved to **A+** (EDA-level sanity overlay + a
+light quantitative anchor; formal cross-pillar historical-event validation stays
+Phase 09). Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** joined the full-record climate region series to
+the ABARES yields at region-year; both yield and climate are detrended per region
+before correlating, so the strong yield trend and the climate trend cannot
+manufacture a spurious linkage.
+
+**Deliverables:**
+1. `src/processing/climate_yield.py` — region-year panel (rain, tmax, yield +
+   per-region detrended residuals); per-region detrended climate–yield correlations;
+   across-region rainfall-CV vs yield-CV; event-year residual summary.
+2. `scripts/phase03_s04_climate_yield.py` — orchestrator + two committed tables.
+3. `tests/test_climate_yield.py` (6).
+4. `notebooks/03_exploratory_analysis.ipynb` §3: four figures (climate-CV vs
+   yield-CV scatter; per-region annual-rain vs yield correlation; event timeline;
+   event-year anomaly by crop) with interpretations + a §3.5 synthesis. Also dropped
+   the unused `MIN_YEARS` import left in the §2 setup.
+5. `outputs/tables/s04_climate_yield_linkage.csv`, `s04_event_year_anomaly.csv`
+   (committed).
+6. `outputs/figures/s04_*.png` (4; committed).
+
+**Findings (descriptive; inference is Phase 06, formal event validation Phase 09):**
+- **Annual climate poorly predicts year-to-year yield**: detrended corr(annual
+  rainfall, yield) median ≈ −0.04 (wheat), ~0 (barley/canola), and *negative* in the
+  WA wheat-belt / TAS where water is not limiting and annual totals mix in
+  non-growing-season rain; corr(tmax, yield) weakly negative, strongest for canola
+  (−0.22, heat sensitivity). → **empirically motivates the growing-season /
+  water-balance (SPI, SPEI) and heat (EHF, GDD) indicators of Pillar 1 (Phase 04)**,
+  not merely methodological completeness.
+- **Structural signal**: across regions, rainfall CV vs yield detrended-CV is
+  positive but modest (wheat +0.31, barley +0.41, canola +0.44) — climate
+  variability shapes the risk map but is not deterministic.
+- **Event sanity**: droughts recover cleanly as below-trend yield (Millennium
+  −0.14..−0.27, 2018 −0.32..−0.43 across crops); the 2013/2017 heat label does NOT
+  read as low-yield (above trend) — a single-year annual-temperature label does not
+  capture flowering-time heat stress.
+
+**Verification:** `pytest -q` 66 passed (climate_yield adds 6); orchestrator writes
+the two tables; `nbconvert --execute` runs the notebook end-to-end on `.venv` (3.12)
+producing the four figures; the notebook is F401-clean (no unused imports).
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5.1. The "annual-resolution climate is
+insufficient" result is a Phase 04 driver, recorded here and carried into
+`methodology.md` at s06.
+
+**Impact:** s04 complete — the climate–yield linkage closes the Phase 03
+where/when/how-much narrative: climate shapes the *structural* risk map, but
+year-to-year yield needs growing-season / water-balance / heat indices; droughts are
+detectable at annual resolution, heat needs finer treatment. Enables s05
+(optional-crop decision) and s06 (closure).
+
+## 2026-07-19 — Phase 03, Step 05: optional-crop decision (sorghum / cotton)
+
+**Context:** s05 resolves the scope §3.2 optional-crop decision (gate ④),
+evidence-led. Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** inspected the raw ABARES FDP regional file for
+sorghum / cotton variables and per-region coverage before deciding.
+
+**Decision — EXCLUDE both for v1.0.**
+- **Cotton — excluded (data).** The FDP regional file carries only
+  `Cotton receipts ($)` — no area/production/yield — so a region-level yield-risk
+  analysis is impossible; cotton is also irrigated, outside the rainfed-broadacre
+  framing (scope §2.5).
+- **Sorghum — deferred to future work.** Yield is derivable (production ÷ area, 259
+  region-years, 1990–2024), but only **6 broadacre regions clear the 10-year bar**
+  (all QLD / N-NSW summer belt; only QLD Eastern Darling Downs RSE 21 and QLD
+  Western Downs RSE 26 are reliable, the rest 46–96), median production RSE ~45 vs
+  19–32 for the core crops, and as a *summer* crop it needs its own Pillar 1
+  growing-season indicators — a separate branch that does not fit the winter-oriented
+  framework. Recorded as a summer-crop companion study to add after the Phase 04
+  indicators exist.
+
+**Rationale (multi-criteria):** the project's value is methodological breadth and
+rigor, not crop count; wheat + barley + canola already demonstrate multi-crop
+generalisation. The binding data constraint is the fixed ~20 broadacre AAGIS regions
+× ~35 years (crop-independent) — sorghum adds neither regions nor years, only ~260
+noisy region-years over a subset of the same regions, while multiplying cost across
+all six downstream pillars and risking dilution of the rigor signal. Per the
+data-quality-adaptive principle, sorghum falls below the reliability bar the core
+crops set.
+
+**Deliverables:**
+1. `src/processing/optional_crops.py` — `cotton_variables()`; sorghum yield
+   derivation + per-region coverage / RSE / adequacy.
+2. `scripts/phase03_s05_optional_crops.py` — orchestrator + committed availability
+   table.
+3. `tests/test_optional_crops.py` (3).
+4. `notebooks/03_exploratory_analysis.ipynb` §4 — cotton no-data note, sorghum
+   availability figure, decision + rationale.
+5. `outputs/tables/s05_optional_crop_availability.csv`;
+   `outputs/figures/s05_sorghum_availability.png` (committed).
+
+**Verification:** `pytest -q` 69 passed (optional_crops adds 3); the orchestrator
+writes the availability table; `nbconvert --execute` runs the notebook end-to-end;
+the notebook is F401-clean.
+
+**Dependencies:** none new.
+
+**Scope:** the §3.2 optional-crop decision is resolved; the scope patch
+(v5.1 → v5.2) recording cotton exclusion + sorghum deferral is applied at the s06
+closure ceremony.
+
+**Impact:** s05 complete — crop coverage locked to wheat / barley / canola for v1.0
+with an evidence-based, logged optional-crop decision. Only the s06 closure ceremony
+remains in Phase 03.
+
+## 2026-07-19 — Phase 03, Step 06: Phase 03 closure ceremony
+
+**Context:** All Phase 03 analysis steps complete (s01 inventory/scaffold; s02
+climate; s03 yield; s04 climate×yield; s05 optional-crop). Executing the closure
+ceremony (PROJECT_WORKFLOW §9).
+
+**Actions:**
+1. **Scope revision v5.1 → v5.2 (patch):** §3.2 optional-crop decision resolved
+   (cotton excluded — no region yield data + irrigated; sorghum deferred to future
+   work). Appendix C gains the previously-missing v5.1 row plus the v5.2 row;
+   header / status / date updated.
+2. **methodology.md §8 (Phase 03) populated** (s01–s05 decisions, gates ①–④, and a
+   data-quality characterisation); header status + companion scope version bumped
+   to v5.2; Appendix B gains the Phase 02 and Phase 03 rows (previously lagged).
+3. **docs/phase_summaries/phase03_summary.md created** (Phase 04 handoff, data-
+   quality assessment, Phase 04 kickoff template; gitignored).
+4. **PROJECT_LOG.md:** s01–s05 entries + this closure entry.
+5. **Git ceremony (to execute):** closure commit on `phase-03-eda`; `--no-ff` merge
+   to `main`; annotated tag `v0.3-phase03-complete`; push `main` + tags.
+
+**Phase 03 deliverables:** 5 processing modules + 2 viz modules, 5 orchestrator
+scripts, 6 test files (**32 Phase 03 tests; 69 total passing**), 1 executed notebook
+(§0–§4, 24 code cells), 6 committed output tables, 16 committed figures, 1 gitignored
+regenerable product (`annual_1961_2024.csv`). Dependencies added: matplotlib,
+seaborn (s01).
+
+**Headline finding:** annual, region-aggregated climate is a weak year-to-year
+predictor of yield → the Pillar 1 growing-season / water-balance / heat indicators
+(Phase 04) are **empirically required**, not merely methodological completeness.
+Supporting: whole-belt warming (20/20) and drying (20/20); yields rising but with
+large lower-tail risk concentrated in the drier, more climate-variable regions;
+droughts detectable at annual resolution, single-year heat not; optional crops
+excluded on the evidence.
+
+**Appendix A discipline scorecard (Phase 03 close — all ✓):** observed-vs-derived
+(ABARES observed target; no model-as-truth) ✓; empirical honesty (the weak
+annual-climate linkage is reported, not hidden) ✓; adaptive/gated decisions logged
+(gates ①–④) ✓; empirical verification before creation ✓; reproducibility (notebook
+executes end-to-end; fresh clone regenerates) ✓; first-use dependency rule
+(matplotlib/seaborn at s01) ✓; idempotent atomic persistence ✓; scope discipline
+(v5.1 → v5.2 patch) ✓; git per-phase branch + `--no-ff` ✓; annotated tag ✓;
+bilingual discipline ✓.
+
+**Impact:** Phase 03 COMPLETE. The *where / when / how much* narrative for climate
+and yield is established, with an empirically-grounded driver for Phase 04. Phase 04
+(Climate Indicator Engineering) is enabled from tag `v0.3-phase03-complete`.
