@@ -1,11 +1,11 @@
-# Project 5 — Project Scope (v5.1)
+# Project 5 — Project Scope (v5.2)
 
 **Repo / project codename:** `agriculture-risk-monitoring-system`
 **Formal title:** *Agriculture Risk Monitoring System: A Multi-Method Research Framework for Australian Broadacre Cropping*
 **Short title:** P5 — Agriculture Risk Monitoring System
 **Author:** Kota
-**Last updated:** 2026-07-17
-**Document status:** v5.1 patch at Phase 02 close — §3.3 canola reliable-yield-window refinement (see Appendix C). Base: post-Phase 01 empirical reconciliation (v5, 2026-07-09), which replaced `p5_ProjectScope_v4.md` (v4, 2026-05-14).
+**Last updated:** 2026-07-19
+**Document status:** v5.2 patch at Phase 03 close — §3.2 optional-crop decision resolved (cotton excluded, sorghum deferred; see Appendix C and `docs/phase_summaries/phase03_summary.md`). Prior: v5.1 (Phase 02 close, §3.3 canola reliable-yield window). Base: post-Phase 01 empirical reconciliation (v5, 2026-07-09), which replaced `p5_ProjectScope_v4.md` (v4, 2026-05-14).
 **GitHub:** https://github.com/kota2003/agriculture-risk-monitoring-system
 
 ---
@@ -120,6 +120,8 @@ State / territory aggregation will be reported descriptively only, not modeled a
 **Out of scope:** horticulture, sugarcane, rice, pastoral livestock, dairy, irrigated systems beyond the optional cotton consideration.
 
 **Phase 01 empirical validation of the tier structure (s07):** ABS Census 2020-21 SA2 counts confirm the intended tier separation. Wheat is reported by 394 SA2 regions, barley by 367, and canola by 255 — validating that canola's geographic footprint is narrower and justifying its "secondary" tier assignment. The most concentrated wheat production region as of 2020-21 is the WA Central and Southern Wheat Belt, which anchors the Phase 09 comparison studies (§5.6.3).
+
+**Phase 03 optional-crop decision (s05):** Resolved on the evidence (Phase 03 EDA, §6.2). **Cotton is excluded** — the ABARES FDP regional file carries no area/production/yield for cotton (only receipts), so a region-level yield-risk analysis is impossible, and cotton is irrigated (outside the rainfed-broadacre framing, §2.5). **Sorghum is deferred to future work** — yield is derivable (production ÷ area) but only 6 broadacre regions have ≥10 reliable years (all QLD/N-NSW summer belt), median production RSE ~45 (vs 19–32 for the core crops), and as a summer crop it would need its own Pillar 1 growing-season indicators. Crop coverage for v1.0 is therefore locked to the wheat/barley/canola tier; sorghum is recorded as a summer-crop companion study for after the Phase 04 indicators exist.
 
 ### 3.3 Temporal
 
@@ -1009,3 +1011,5 @@ Phase 01 tag: `v0.1-phase01-complete` (annotated, on the merge commit into `main
 | v3 | 2026-05-11 | Formal title and codename aligned with GitHub repo; tech stack switched from conda hybrid to pip + venv, CPU-only; GPU support dropped; code quality tooling added; Python 3.11 → 3.12 to match Project 4 |
 | v4 | 2026-05-14 | Pre-Phase 01 recalibration to Master-research-grade. Mixed-resolution spatial strategy (§3.6); grid-based SILO ingestion with ACLUMP cropping mask (§4.1, §4.4); AGFD as Phase 09 independent validation with observed-vs-derived discipline (§4.6, §2.5); MAUP robustness study (§5.6.2); AAGIS region formally named as primary yield unit (§3.1); xarray/netCDF4/rasterio added to stack |
 | **v5** | **2026-07-09** | **Post-Phase 01 empirical reconciliation.** 7 findings from Phase 01 data acquisition reflected across the document: (a) §3.1, §11.6 AAGIS 3-digit code ↔ FDP text name mismatch documented; Phase 02 mapping table task defined. (b) §4.3, §5.3, §11.6 ABARES FDP per-typical-farm semantics documented; Phase 02 farm-count-weighting task defined. (c) §3.3, §4.3 yield-modeling period 1980 → 1990 (ABARES FDP earliest year). (d) §4.3, §13 ABS Ag Census 2020-21 = final Census; post-2020-21 requires modernised pipeline (out of v1.0 scope). (e) §4.2, §12.2 ACORN-SAT 18 stations unavailable; effective count = 94. (f) §4.1, §3.3, §5.1 SILO evappan effective from 1970; SPEI restricted to 1970+. (g) §4.5, §5.6.4 OpenWeather 10-region selection concretised with lat/lon centroids; 2022–2024 sample; 100% coverage acquired; total cost £11.40. Additional structural updates: §6.2 Phase 00 and Phase 01 marked complete with actual volumes; §9.2 runtime dependency list updated with openpyxl / python-dot
+| v5.1 | 2026-07-17 | Patch at Phase 02 close: §3.3 canola reliable-yield window refined to 1994+ (RSE gate); wheat/barley remain 1990+. |
+| v5.2 | 2026-07-19 | Patch at Phase 03 close: §3.2 optional-crop decision resolved — cotton excluded (no region yield data; irrigated), sorghum deferred to future work (6 broadacre regions ≥10 yr, RSE ~45, summer-season). Phase 03 EDA finding — annual-resolution climate poorly predicts year-to-year yield — recorded as the empirical driver for the Pillar 1 growing-season / water-balance / heat indicators (methodology §8; phase03_summary). |

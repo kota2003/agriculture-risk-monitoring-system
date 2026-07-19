@@ -1206,3 +1206,50 @@ closure ceremony.
 **Impact:** s05 complete — crop coverage locked to wheat / barley / canola for v1.0
 with an evidence-based, logged optional-crop decision. Only the s06 closure ceremony
 remains in Phase 03.
+
+## 2026-07-19 — Phase 03, Step 06: Phase 03 closure ceremony
+
+**Context:** All Phase 03 analysis steps complete (s01 inventory/scaffold; s02
+climate; s03 yield; s04 climate×yield; s05 optional-crop). Executing the closure
+ceremony (PROJECT_WORKFLOW §9).
+
+**Actions:**
+1. **Scope revision v5.1 → v5.2 (patch):** §3.2 optional-crop decision resolved
+   (cotton excluded — no region yield data + irrigated; sorghum deferred to future
+   work). Appendix C gains the previously-missing v5.1 row plus the v5.2 row;
+   header / status / date updated.
+2. **methodology.md §8 (Phase 03) populated** (s01–s05 decisions, gates ①–④, and a
+   data-quality characterisation); header status + companion scope version bumped
+   to v5.2; Appendix B gains the Phase 02 and Phase 03 rows (previously lagged).
+3. **docs/phase_summaries/phase03_summary.md created** (Phase 04 handoff, data-
+   quality assessment, Phase 04 kickoff template; gitignored).
+4. **PROJECT_LOG.md:** s01–s05 entries + this closure entry.
+5. **Git ceremony (to execute):** closure commit on `phase-03-eda`; `--no-ff` merge
+   to `main`; annotated tag `v0.3-phase03-complete`; push `main` + tags.
+
+**Phase 03 deliverables:** 5 processing modules + 2 viz modules, 5 orchestrator
+scripts, 6 test files (**32 Phase 03 tests; 69 total passing**), 1 executed notebook
+(§0–§4, 24 code cells), 6 committed output tables, 16 committed figures, 1 gitignored
+regenerable product (`annual_1961_2024.csv`). Dependencies added: matplotlib,
+seaborn (s01).
+
+**Headline finding:** annual, region-aggregated climate is a weak year-to-year
+predictor of yield → the Pillar 1 growing-season / water-balance / heat indicators
+(Phase 04) are **empirically required**, not merely methodological completeness.
+Supporting: whole-belt warming (20/20) and drying (20/20); yields rising but with
+large lower-tail risk concentrated in the drier, more climate-variable regions;
+droughts detectable at annual resolution, single-year heat not; optional crops
+excluded on the evidence.
+
+**Appendix A discipline scorecard (Phase 03 close — all ✓):** observed-vs-derived
+(ABARES observed target; no model-as-truth) ✓; empirical honesty (the weak
+annual-climate linkage is reported, not hidden) ✓; adaptive/gated decisions logged
+(gates ①–④) ✓; empirical verification before creation ✓; reproducibility (notebook
+executes end-to-end; fresh clone regenerates) ✓; first-use dependency rule
+(matplotlib/seaborn at s01) ✓; idempotent atomic persistence ✓; scope discipline
+(v5.1 → v5.2 patch) ✓; git per-phase branch + `--no-ff` ✓; annotated tag ✓;
+bilingual discipline ✓.
+
+**Impact:** Phase 03 COMPLETE. The *where / when / how much* narrative for climate
+and yield is established, with an empirically-grounded driver for Phase 04. Phase 04
+(Climate Indicator Engineering) is enabled from tag `v0.3-phase03-complete`.

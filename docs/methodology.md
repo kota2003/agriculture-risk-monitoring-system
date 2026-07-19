@@ -2,9 +2,9 @@
 
 *Agriculture Risk Monitoring System — Master research-grade portfolio project*
 
-**Last updated:** 2026-07-10 (Phase 01 s09 closure)
-**Status:** Progressive document — Phase 01 sections are populated; Phase 02+ sections are placeholders that will be filled as each phase executes.
-**Companion documents:** `docs/project_scope.md` (v5); `PROJECT_LOG.md` (append-only decision log); `data/raw/manifest.yaml` (data provenance).
+**Last updated:** 2026-07-19 (Phase 03 s06 closure)
+**Status:** Progressive document — Sections 1–8 (Phases 01–03) are populated; Sections 9–15 (Phases 04–10) are placeholders that will be filled as each phase executes.
+**Companion documents:** `docs/project_scope.md` (v5.2); `PROJECT_LOG.md` (append-only decision log); `data/raw/manifest.yaml` (data provenance).
 
 ---
 
@@ -260,11 +260,31 @@ Daily OpenWeather day-summary records are paired with SILO at the nearest croppi
 
 ## 8. Phase 03 — Exploratory Analysis
 
-*Placeholder — this section will be populated at Phase 03 completion. Planned content:*
+Phase 03 established the baseline empirical understanding of climate and yield variation across the 20 AAGIS broadacre regions and resolved the optional-crop decision. Products live in `src/processing/` (`input_inventory`, `silo_climatology`, `yield_stats`, `climate_yield`, `optional_crops`) and `src/viz/` (`style`, `maps`), driven by `scripts/phase03_s0X_*.py` and rendered in `notebooks/03_exploratory_analysis.ipynb`. All statistics are descriptive; inference is Phases 05–06 and formal event validation is Phase 09.
 
-- Baseline regional climate climatologies (temperature, rainfall, extremes) 1961–present.
-- Yield trend and dispersion by AAGIS region.
-- Empirical evidence for the optional-crop decision (Sorghum / Cotton).
+### 8.1 Data inventory & EDA scaffolding (s01)
+
+Verified the Phase 02 analysis-ready inputs — shapes, region-key alignment across the yield (region name) and climate (`aagis_code`) products, and joint presence of the 20 broadacre regions. Established the project's first notebook and a single visual system (Okabe-Ito colourblind-safe categorical, assigned in fixed order; single-hue sequential for magnitude; `RdBu_r` diverging with a neutral midpoint for signed change).
+
+### 8.2 Regional climate climatology (s02)
+
+**Decision (gate ①):** re-aggregate SILO region means over the FULL record (1961–2024; evap_pan 1970–2024) rather than align to the yield window — the full daily archive is already on disk, the superset serves both the EDA and later Pillar 2 EVT reuse, and it enables both WMO baselines. The monthly climatology is kept at 1991–2020 (seasonality is baseline-insensitive). Findings: max temperature rises in all 20 broadacre regions (~+0.2 °C/decade; +0.61 °C median between the 1961–1990 and 1991–2020 baselines); annual rainfall falls in all 20 (median −6.6%); interannual rainfall variability is highest in the dry interior/Mallee (CV up to 0.31) and lowest in the Mediterranean south-west (0.14); rainfall is winter-dominant in the south/west and summer-dominant in QLD. The evap_pan 1961–1990 baseline necessarily uses 1970–1990.
+
+### 8.3 Yield trends & dispersion (s03)
+
+**Decision (gate ②):** diagnostic-only — the survey RSE is reported as a data-quality caveat, not used to weight the descriptive statistics; inverse-RSE weighting is deferred to the Phase 06 regression models. Dispersion uses the *detrended* CV so the rising yield trend does not inflate the variability measure; regions with fewer than 10 reliable years (marginal High-Rainfall croppers) are flagged rather than mixed in. Findings: yields rise in ~17/19 adequate regions per crop (~+0.2–0.26 t/ha/decade) despite the warming-and-drying climate; lower-tail risk is large (a 1-in-10 year is ~45–60% of the regional median); detrended yield variability is lowest in the WA/SA wheat-belt (~0.20) and highest on the eastern/coastal margin (~0.84) — the same geography as rainfall variability.
+
+### 8.4 Climate–yield linkage & historical-event sanity (s04)
+
+Both yield and climate are detrended per region before correlating, so the strong yield trend and the climate trend cannot manufacture a spurious linkage. **Key result:** annual, region-aggregated climate is a weak year-to-year predictor of yield — detrended corr(annual rainfall, yield) median ≈ −0.04 (negative in the WA wheat-belt / TAS, where water is not limiting and annual totals mix in non-growing-season rain); corr(tmax, yield) weakly negative, strongest for canola (−0.22, heat sensitivity). This is the phase's principal methodological driver: it **empirically motivates the Pillar 1 growing-season / water-balance (SPI, SPEI) and heat (EHF, GDD) indicators (Phase 04)**, not merely methodological completeness. Across regions, rainfall CV vs yield detrended-CV is positive but modest (+0.31 wheat to +0.44 canola) — climate variability shapes the risk map without determining it. **Event sanity (gate ③ = A+):** droughts recover cleanly as below-trend yield (Millennium Drought 2001–2009, 2018), but the 2013/2017 heat label does not, because a single-year annual-temperature label misses flowering-time heat stress. Formal cross-pillar event validation remains Phase 09.
+
+### 8.5 Optional-crop decision (s05)
+
+**Decision (gate ④):** exclude both. **Cotton** on data grounds — the FDP regional file carries only `Cotton receipts ($)` (no area/production/yield), so a region-level yield-risk analysis is impossible; cotton is also irrigated, outside the rainfed-broadacre framing. **Sorghum** deferred to future work — yield is derivable (production ÷ area) but only 6 broadacre regions clear the 10-year bar (all QLD/N-NSW summer belt), median production RSE ~45 vs 19–32 for the core crops, and as a summer crop it would require its own Pillar 1 growing-season indicators. The binding data constraint is the fixed ~20 broadacre AAGIS regions × ~35 years (crop-independent); sorghum adds neither regions nor years, so crop coverage is locked to wheat/barley/canola for v1.0, with sorghum recorded as a summer-crop companion study for after the Phase 04 indicators exist.
+
+### 8.6 Data quality (as characterised by the EDA)
+
+Climate (SILO) is high and validated — full record, zero NaN after the Phase 02 masking fix, physically coherent signals; the only caveats are localized ACORN-SAT validation gaps (QLD Eastern Darling Downs no station + 4 sparse broadacre regions) and evap_pan starting 1970. Yield (ABARES) is moderate and survey-limited — substantial production RSE (median 19 wheat to 32 canola, p90 ~60) and sparse coverage in marginal High-Rainfall coastal regions; the core Wheat-Sheep regions with full 35-year series are reliable. The mixed-resolution design (grid climate → region yield) is the deliberate response to the region-limited yield data, and is sufficient for the multi-method pillars — Pillar 4 (ML, ~650 wheat samples) being the tightest, mitigated by spatial-blocked cross-validation.
 
 ---
 
@@ -384,5 +404,7 @@ Daily OpenWeather day-summary records are paired with SILO at the nearest croppi
 | Date | Change |
 |---|---|
 | 2026-07-10 | Skeleton created at Phase 01 s09 closure. Sections 1–6 populated with Phase 01 decisions; sections 7–15 are placeholders for Phase 02–10 expansion. |
+| 2026-07-17 | Section 7 (Phase 02) populated at the Phase 02 closure ceremony (region mapping, Population weighting + RSE gate, SILO masking fix, grid-vs-region consistency, ACORN-SAT coverage, OpenWeather–SILO). |
+| 2026-07-19 | Section 8 (Phase 03) populated at the s06 closure ceremony; header status and companion scope version (v5.2) updated. |
 
 *End of methodology.md.*
