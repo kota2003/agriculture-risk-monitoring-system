@@ -1,0 +1,24 @@
+region,n_years,median_yield,median_prod_rse,broadacre,adequate
+NSW North West Slopes and Plains,35,3.111111111111111,31.0,True,True
+QLD Eastern Darling Downs,35,3.634920634920635,21.0,True,True
+QLD Southern Coastal - Curtis to Moreton,35,2.5833333333333335,46.0,True,True
+QLD Western Downs and Central Highlands,35,1.6764705882352942,26.0,True,True
+NSW Tablelands (Northern Central and Southern),28,3.0,69.0,True,True
+NSW Central West,21,3.5,96.5,True,True
+QLD Charleville - Longreach,14,1.1666666666666665,105.0,False,True
+QLD Central North,9,1.2307692307692308,100.0,False,False
+NT Top End Darwin,8,2.2,82.0,False,False
+NSW Riverina,7,4.0,88.0,True,False
+QLD West and South West,6,2.333333333333333,110.0,False,False
+NSW Far West,5,1.8571428571428572,75.0,False,False
+SA Murray Lands and Yorke Peninsula,4,1.5,111.5,True,False
+QLD Northern Coastal - Mackay to Cairns,3,1.4444444444444444,88.5,True,False
+NT Alice Springs Districts,2,0.5892857142857143,105.0,False,False
+WA Northern and Eastern Wheat Belt,2,0.0,,True,False
+NT Victoria River District - Katherine,2,0.0,,False,False
+VIC Wimmera,2,0.0,,True,False
+VIC Mallee,2,5.833333333333334,121.0,True,False
+NSW Coastal,1,0.0,,True,False
+QLD Cape York and the Gulf,1,0.0,,False,False
+WA South West Coastal,1,0.0,,True,False
+WA The Kimberley,1,5.666666666666667,108.0,False,False

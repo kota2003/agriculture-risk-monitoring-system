@@ -1150,3 +1150,59 @@ where/when/how-much narrative: climate shapes the *structural* risk map, but
 year-to-year yield needs growing-season / water-balance / heat indices; droughts are
 detectable at annual resolution, heat needs finer treatment. Enables s05
 (optional-crop decision) and s06 (closure).
+
+## 2026-07-19 — Phase 03, Step 05: optional-crop decision (sorghum / cotton)
+
+**Context:** s05 resolves the scope §3.2 optional-crop decision (gate ④),
+evidence-led. Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** inspected the raw ABARES FDP regional file for
+sorghum / cotton variables and per-region coverage before deciding.
+
+**Decision — EXCLUDE both for v1.0.**
+- **Cotton — excluded (data).** The FDP regional file carries only
+  `Cotton receipts ($)` — no area/production/yield — so a region-level yield-risk
+  analysis is impossible; cotton is also irrigated, outside the rainfed-broadacre
+  framing (scope §2.5).
+- **Sorghum — deferred to future work.** Yield is derivable (production ÷ area, 259
+  region-years, 1990–2024), but only **6 broadacre regions clear the 10-year bar**
+  (all QLD / N-NSW summer belt; only QLD Eastern Darling Downs RSE 21 and QLD
+  Western Downs RSE 26 are reliable, the rest 46–96), median production RSE ~45 vs
+  19–32 for the core crops, and as a *summer* crop it needs its own Pillar 1
+  growing-season indicators — a separate branch that does not fit the winter-oriented
+  framework. Recorded as a summer-crop companion study to add after the Phase 04
+  indicators exist.
+
+**Rationale (multi-criteria):** the project's value is methodological breadth and
+rigor, not crop count; wheat + barley + canola already demonstrate multi-crop
+generalisation. The binding data constraint is the fixed ~20 broadacre AAGIS regions
+× ~35 years (crop-independent) — sorghum adds neither regions nor years, only ~260
+noisy region-years over a subset of the same regions, while multiplying cost across
+all six downstream pillars and risking dilution of the rigor signal. Per the
+data-quality-adaptive principle, sorghum falls below the reliability bar the core
+crops set.
+
+**Deliverables:**
+1. `src/processing/optional_crops.py` — `cotton_variables()`; sorghum yield
+   derivation + per-region coverage / RSE / adequacy.
+2. `scripts/phase03_s05_optional_crops.py` — orchestrator + committed availability
+   table.
+3. `tests/test_optional_crops.py` (3).
+4. `notebooks/03_exploratory_analysis.ipynb` §4 — cotton no-data note, sorghum
+   availability figure, decision + rationale.
+5. `outputs/tables/s05_optional_crop_availability.csv`;
+   `outputs/figures/s05_sorghum_availability.png` (committed).
+
+**Verification:** `pytest -q` 69 passed (optional_crops adds 3); the orchestrator
+writes the availability table; `nbconvert --execute` runs the notebook end-to-end;
+the notebook is F401-clean.
+
+**Dependencies:** none new.
+
+**Scope:** the §3.2 optional-crop decision is resolved; the scope patch
+(v5.1 → v5.2) recording cotton exclusion + sorghum deferral is applied at the s06
+closure ceremony.
+
+**Impact:** s05 complete — crop coverage locked to wheat / barley / canola for v1.0
+with an evidence-based, logged optional-crop decision. Only the s06 closure ceremony
+remains in Phase 03.
