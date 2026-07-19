@@ -86,7 +86,7 @@ def region_choropleth(
     extend = "neither"
     legend_kwds = {"label": label, "shrink": 0.6}
     plot_kwds = dict(cmap=cmap, edgecolor=_REGION_EDGE, linewidth=0.5, legend=True)
-    v = bro[value_col]
+    v = bro[value_col].dropna()
     if diverging:
         m = float(max(abs(v.min()), abs(v.max())))
         plot_kwds.update(vmin=-m, vmax=m)
@@ -95,7 +95,20 @@ def region_choropleth(
         extend = "max"
     legend_kwds["extend"] = extend
 
-    bro.plot(ax=ax, column=value_col, legend_kwds=legend_kwds, **plot_kwds)
+    # Broadacre regions with no value (e.g. sparse-coverage regions excluded from
+    # a statistic) are drawn as an explicit hatched "no data" fill, not left blank.
+    bro.plot(
+        ax=ax,
+        column=value_col,
+        legend_kwds=legend_kwds,
+        missing_kwds={
+            "color": "#FFFFFF",
+            "edgecolor": "#999999",
+            "hatch": "////",
+            "linewidth": 0.4,
+        },
+        **plot_kwds,
+    )
     ax.axis("off")
     if title:
         ax.set_title(title)

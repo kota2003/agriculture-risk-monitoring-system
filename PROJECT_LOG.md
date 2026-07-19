@@ -1035,3 +1035,61 @@ anomaly analysis later requires it.
 **Impact:** s02 complete — full-record climate climatology and the "where / when /
 how much (climate)" narrative, with a coherent whole-belt warming-and-drying signal.
 Enables s03 (yield trends & dispersion).
+
+## 2026-07-19 — Phase 03, Step 03: ABARES region-yield EDA (trends, dispersion, lower tail)
+
+**Context:** s03 (yield trends & dispersion). Decision gate ② resolved to
+**diagnostic-only**: the survey RSE is reported as a data-quality caveat, not used
+to weight the descriptive statistics; inverse-RSE weighting is deferred to the
+Phase 06 regression models. Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** inspected the ABARES processed yields before
+building — columns `region/year/area_ha/production_t/yield_t_ha/area_rse/production_rse`;
+reliable-window broadacre non-NA region-years = wheat 647 / barley 642 / canola 428
+(canola's 28 pre-1994 non-NA excluded, matching the s01 finding). Some High-Rainfall
+coastal regions are marginal croppers (1–2 yield years, CV up to ~0.85), so a
+`MIN_YEARS = 10` coverage flag was added rather than mixing them in.
+
+**Deliverables:**
+1. `src/processing/yield_stats.py` — reliable-window + broadacre load; per-region
+   descriptive statistics: mean/median, OLS trend (t/ha/decade), CV and *detrended*
+   CV, lower-tail (p10, p10/median, worst/median), median production RSE, adequacy flag.
+2. `scripts/phase03_s03_yield_summary.py` — orchestrator + committed summary table.
+3. `src/viz/maps.py` — added a hatched "no data" fill for regions missing a value
+   (sparse-coverage exclusions); reused across all choropleths.
+4. `tests/test_yield_stats.py` (7).
+5. `notebooks/03_exploratory_analysis.ipynb` §2: five figures — wheat yield trend
+   small-multiples (high-RSE years flagged), yield distribution by region,
+   detrended-CV choropleth, lower-tail p10/median, cross-crop comparison — each with
+   an interpretation, plus a §2.6 synthesis.
+6. `outputs/tables/s03_yield_region_summary.csv` (57 rows; committed).
+7. `outputs/figures/s03_*.png` (5; committed).
+
+**Findings (descriptive; inference is Pillar 3 / Phase 06):**
+- **Yields rise** in ~17/19 adequate regions per crop: wheat +0.23, barley +0.26,
+  canola +0.22 t/ha/decade — agronomic gains against the warming-and-drying climate.
+- **Downside risk is large**: a 1-in-10 year is ~45–60% of the regional median
+  (min p10/median as low as 0.06; barley has a total-failure region-year).
+- **Variability geography matches climate**: detrended yield CV lowest in the WA/SA
+  wheat-belt (~0.16–0.20), highest on the eastern/coastal margin (~0.84) — the same
+  regions as the §1 rainfall-variability map.
+- **Coverage**: wheat 19/20 adequate (QLD Northern Coastal sparse), barley 19/19,
+  canola 14/18 — canola is absent/sparse in the QLD summer-crop regions, TAS, and
+  NSW Coastal (a southern-winter-oilseed footprint relevant to the s05 optional-crop
+  decision).
+- **Cross-crop**: wheat ≈ barley median ~2.0–2.2 t/ha, canola ~1.4 (oilseed);
+  comparable detrended CV — the three behave as one broadacre system.
+
+**Verification:** `pytest -q` passes (yield_stats adds 7 → 60 total); the orchestrator
+writes the 57-row summary; `nbconvert --execute` runs the notebook end-to-end on
+`.venv` (3.12), producing the five figures.
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5.1. Inverse-RSE weighting carried to Phase 06
+(gate ②).
+
+**Impact:** s03 complete — the "where / when / how much (yield)" half of the exit
+narrative: rising means but persistent lower-tail risk, concentrated in the drier,
+more climate-variable regions. Enables s04 (climate–yield joint view + historical-
+event sanity).
