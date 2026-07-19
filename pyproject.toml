@@ -35,3 +35,7 @@ target-version = "py312"
 # is a documented project convention (scope §11.6, PROJECT_WORKFLOW); the
 # rule is suppressed for the affected files only.
 "scripts/phase*.py" = ["E402"]
+# Phase NN notebooks use the same sys.path injection pattern (repo root on
+# sys.path so `from src.*` resolves when run from notebooks/); the injection
+# block precedes those imports, triggering E402. Suppressed for notebooks only.
+"notebooks/*.ipynb" = ["E402"]

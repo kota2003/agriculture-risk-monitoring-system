@@ -42,6 +42,10 @@ python-dotenv>=1.0
 # --- Parquet I/O (Phase 01 Step 08: OpenWeather day_summary persistence; reused Phase 04+ for indicator panels) ---
 pyarrow>=15
 
+# --- Visualization (Phase 03 EDA: regional climatologies, yield trends/dispersions) ---
+matplotlib>=3.8
+seaborn>=0.13
+
 # --- Notebook tooling ---
 jupyter>=1.0
 ipykernel>=6.29
@@ -49,7 +53,7 @@ nbformat>=5.10
 nbconvert>=7.16
 
 # Note: additional libraries will be added Phase-by-Phase:
-#   Phase 03 EDA:           matplotlib, seaborn
+#   Phase 03 EDA:           matplotlib, seaborn   (added above)
 #   Phase 04 indicators:    scipy
 #   Phase 05 EVT:           scipy.stats, pyextremes
 #   Phase 06 statistical:   statsmodels, linearmodels

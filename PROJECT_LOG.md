@@ -912,3 +912,70 @@ documented rather than retroactively justified.
 - Bilingual discipline — English artefacts, Japanese conversation, no mixing. ✓
 
 **Impact:** Phase 02 COMPLETE. Analysis-ready, cross-validated inputs for Pillars 1–6, with an important Phase 01 data-integrity bug corrected. Phase 03 (Exploratory Analysis) is enabled from a clean, documented, reproducible state at tag `v0.2-phase02-complete`.
+
+## 2026-07-18 — Phase 03, Step 01: data inventory + EDA scaffolding
+
+**Context:** Phase 03 (Exploratory Data Analysis) kickoff. Working branch
+`phase-03-eda` created from `main` (tag `v0.2-phase02-complete`). Step 01 goal
+(scope §6.2): load the Phase 02 analysis-ready inputs, verify their shapes /
+coverage / region-key alignment, and stand up the EDA scaffold — a verified data
+baseline before any substantive EDA or the optional-crop decision.
+
+**Empirical verification before creation (PROJECT_WORKFLOW §2.4):** inspected the
+real artefacts before writing code. Findings that corrected scope Appendix A:
+- `notebooks/` was empty (only `.gitkeep`); `03_exploratory_analysis.ipynb` is the
+  project's FIRST notebook and sets the notebook conventions (kernel = `.venv`
+  3.12; executes top-to-bottom; every figure carries a one-sentence interpretation).
+- `src/viz/` held only an empty `__init__.py` (no `maps.py`, contrary to Appendix A);
+  `src/viz/style.py` is therefore new with no conflict.
+- The full masked SILO daily archive is on disk (1961–2024 for
+  tmax/tmin/rain/vp/radiation, 1970–2024 for evap_pan). A full-record region
+  re-aggregation (s02) needs NO re-download.
+- The persisted SILO region means cover the 1991–2020 reference period only
+  (`silo_region_means/annual_1991_2020.csv`) — the gap handed to s02.
+
+**Deliverables:**
+1. `src/processing/input_inventory.py` — loads the 14 Phase 02 products, records
+   shapes/columns, checks structural invariants, and (atomically) writes the
+   inventory table. Reused by the orchestrator and the notebook (src-promotion
+   per §11.6).
+2. `scripts/phase03_s01_data_inventory.py` — orchestrator; prints inventory +
+   invariants + reliable-window summary, exits non-zero on any failure.
+3. `tests/test_input_inventory.py` — 3 pure-logic + 4 data-backed tests
+   (data-backed skip if the gitignored processed data is absent).
+4. `src/viz/style.py` — project-wide matplotlib/seaborn style. Categorical =
+   Okabe-Ito (colourblind-safe, fixed order, non-cycled); sequential = single-hue
+   (cividis / YlGnBu / inferno); diverging = RdBu_r (neutral midpoint); stable
+   entity→colour maps for zones / commodities / SILO variables; `SEED = 42`.
+5. `notebooks/03_exploratory_analysis.ipynb` — EDA scaffold (16 cells): §0 setup +
+   verified inventory (executable), §1–§5 stubs for s02–s06, running caveats list.
+6. `outputs/tables/s01_input_inventory.csv` — committed inventory table.
+
+**Verification (all green):**
+- Inventory: 14 products present; row counts match (region_mapping 32; each of
+  wheat/barley/canola raw + region_totals 1,114; SILO annual 5,400; SILO monthly
+  2,160; cell-region map 28,577).
+- Invariants: 32 mapped regions; 20 broadacre regions jointly present in the yield
+  (region name) and climate (aagis_code) products; the 2 SILO-uncovered regions
+  are exactly 511 (WA The Kimberley) / 711 (NT Alice Springs), both Pastoral;
+  region names/codes subset the mapping.
+- Reliable yield windows: non-NA yields wheat 747 / barley 738 / canola 482;
+  canola carries 122 pre-1994 rows (28 with a non-NA yield) excluded by the RSE
+  gate — carried forward to s03 (yield EDA) and s05 (optional-crop decision).
+- `pytest -q`: 44 passed (37 Phase 02 + 7 new). `nbconvert --execute` runs the
+  notebook end-to-end on the `.venv` (3.12) kernel with no error.
+
+**First-use dependency rule (§11.7 / §8.2):** `matplotlib>=3.8` and `seaborn>=0.13`
+added to `requirements.txt` in the same commit as `src/viz/style.py`.
+
+**Environment note:** stray `cpython-310` `.pyc` files were observed under
+`src/__pycache__`; confirmed the active interpreter for tests and the notebook is
+the `.venv` (Python 3.12) — `nbconvert --execute` ran under `.venv`.
+
+**Scope:** no revision; scope stays v5.1. Open Phase 03 decisions logged for their
+steps: gate ① SILO re-aggregation window (s02); gate ② RSE weighting (s03,
+possibly Phase 06); Task H historical-event sanity (s04); optional-crop decision
+(s05).
+
+**Impact:** Step 01 complete — a verified, cross-checked data baseline and an
+executable EDA scaffold. Phase 03 s02 (regional climate climatology) is enabled.
