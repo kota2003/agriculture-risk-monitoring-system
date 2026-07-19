@@ -979,3 +979,59 @@ possibly Phase 06); Task H historical-event sanity (s04); optional-crop decision
 
 **Impact:** Step 01 complete — a verified, cross-checked data baseline and an
 executable EDA scaffold. Phase 03 s02 (regional climate climatology) is enabled.
+
+## 2026-07-19 — Phase 03, Step 02: full-record SILO region climatology + climate EDA
+
+**Context:** s02 (regional climate climatology). Decision gate ① resolved to option
+C — re-aggregate SILO region means over the FULL record (1961–2024; evap_pan
+1970–2024) rather than align to the yield window. The full masked daily archive
+(~13 GB) is already on disk (no re-download); the superset serves both the EDA and
+later Pillar 2 EVT reuse, and enables both WMO baselines. Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** inspected `silo_region_aggregation.py` before
+building — it applies a single year-range to all variables, always computes the
+monthly climatology in the same pass, and raises on missing files (evap_pan
+pre-1970). So an annual-only, per-variable-year-range aggregation was added that
+reuses the Phase 02 weighting core unchanged, avoiding wasted monthly recompute.
+
+**Deliverables:**
+1. `src/processing/silo_climatology.py` — annual full-record aggregation (reuses
+   `weighted_region_means` / `resolve_cell_grid_indices` / `AGG_RULE`), WMO
+   baselines (1961–1990, 1991–2020), sanity checks, loaders.
+2. `scripts/phase03_s02_silo_full_record.py` — orchestrator (pre-flight, ~30–60 min
+   single pass, sanity gate, atomic writes).
+3. `src/viz/maps.py` — reusable AAGIS choropleth (pastoral greyed for context;
+   sequential / diverging / vmax-capped scales). Reused later by Pillar 6 risk maps.
+4. `tests/test_silo_climatology.py` (6), `tests/test_maps.py` (3).
+5. `notebooks/03_exploratory_analysis.ipynb` §1 populated with 7 figures — F1/F2
+   spatial baseline choropleths, F3 seasonality, F4 rainfall small-multiples + OLS
+   trend, F5 tmax anomaly, F6 rainfall CV, F7 baseline-shift diverging maps — each
+   with a one-sentence interpretation, plus a §1.7 synthesis.
+6. `data/processed/silo_region_means/annual_1961_2024.csv` (11,250 rows; gitignored).
+7. `outputs/tables/s02_region_climate_baselines.csv` (360 rows; committed).
+8. `outputs/figures/s02_*.png` (6; committed).
+
+**Findings (descriptive; inferential testing is Pillar 2 / Phase 05):**
+- **Warming in 20/20** broadacre regions: per-region OLS +0.05..+0.26 °C/decade
+  (median +0.20); baseline-shift median +0.61 °C (up to ~+1.0 in inland QLD).
+- **Drying in 20/20**: annual-rainfall baseline shift median −6.6% (−12.7..−1.0%).
+- **Variability**: annual-rainfall CV highest in the dry interior/Mallee (VIC Mallee
+  0.31; VIC Central North / NSW Riverina ~0.29), lowest in the Mediterranean
+  south-west (WA South West Coastal 0.14; WA Wheat Belt 0.17) — drier = more variable.
+- **Seasonality**: winter-dominant south/west (aligned to winter crops),
+  summer-dominant QLD.
+
+**Verification:** aggregation sanity all pass (30 regions, 11,250 rows, 0 NaN,
+tmax>tmin, rain≥0); evap_pan 1961–1990 baseline uses 1970–1990 (n_years=21),
+documented. `pytest -q` 53 passed. `nbconvert --execute` runs the notebook
+end-to-end on `.venv` (3.12), producing the six figures.
+
+**Dependencies:** none new (matplotlib/seaborn added at s01).
+
+**Scope:** no revision; scope stays v5.1. Monthly climatology kept at 1991–2020
+(seasonality is baseline-insensitive); a 1961–1990 monthly baseline can be added if
+anomaly analysis later requires it.
+
+**Impact:** s02 complete — full-record climate climatology and the "where / when /
+how much (climate)" narrative, with a coherent whole-belt warming-and-drying signal.
+Enables s03 (yield trends & dispersion).

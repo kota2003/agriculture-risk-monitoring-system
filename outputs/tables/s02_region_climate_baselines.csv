@@ -1,0 +1,361 @@
+aagis_code,region_name,variable,baseline,value,n_years
+111,NSW Far West,daily_rain,1961-1990,356.7660439961209,30
+111,NSW Far West,evap_pan,1961-1990,5.474524120762138,21
+111,NSW Far West,max_temp,1961-1990,24.722470686962712,30
+111,NSW Far West,min_temp,1961-1990,11.154828241804472,30
+111,NSW Far West,radiation,1961-1990,18.70632057508617,30
+111,NSW Far West,vp,1961-1990,11.486103169746896,30
+121,NSW North West Slopes and Plains,daily_rain,1961-1990,557.8093406505274,30
+121,NSW North West Slopes and Plains,evap_pan,1961-1990,5.239901988324226,21
+121,NSW North West Slopes and Plains,max_temp,1961-1990,25.69900102634787,30
+121,NSW North West Slopes and Plains,min_temp,1961-1990,11.526432154162414,30
+121,NSW North West Slopes and Plains,radiation,1961-1990,19.138695534141952,30
+121,NSW North West Slopes and Plains,vp,1961-1990,12.994583604081985,30
+122,NSW Central West,daily_rain,1961-1990,555.4409228295178,30
+122,NSW Central West,evap_pan,1961-1990,4.788844673540433,21
+122,NSW Central West,max_temp,1961-1990,23.46940644589797,30
+122,NSW Central West,min_temp,1961-1990,9.961016182735865,30
+122,NSW Central West,radiation,1961-1990,18.307948184735725,30
+122,NSW Central West,vp,1961-1990,11.911815918107173,30
+123,NSW Riverina,daily_rain,1961-1990,498.1214779068397,30
+123,NSW Riverina,evap_pan,1961-1990,4.50621995128241,21
+123,NSW Riverina,max_temp,1961-1990,22.54370164014198,30
+123,NSW Riverina,min_temp,1961-1990,9.32343890085815,30
+123,NSW Riverina,radiation,1961-1990,17.61474784839055,30
+123,NSW Riverina,vp,1961-1990,11.514563704289332,30
+131,NSW Tablelands (Northern Central and Southern),daily_rain,1961-1990,783.0527432860138,30
+131,NSW Tablelands (Northern Central and Southern),evap_pan,1961-1990,3.7472470663989825,21
+131,NSW Tablelands (Northern Central and Southern),max_temp,1961-1990,19.68581051281048,30
+131,NSW Tablelands (Northern Central and Southern),min_temp,1961-1990,7.096240608524506,30
+131,NSW Tablelands (Northern Central and Southern),radiation,1961-1990,17.283364156937886,30
+131,NSW Tablelands (Northern Central and Southern),vp,1961-1990,11.183600369720995,30
+132,NSW Coastal,daily_rain,1961-1990,1309.9208877193332,30
+132,NSW Coastal,evap_pan,1961-1990,4.057070349660132,21
+132,NSW Coastal,max_temp,1961-1990,23.40463645113094,30
+132,NSW Coastal,min_temp,1961-1990,12.586353515607948,30
+132,NSW Coastal,radiation,1961-1990,17.55002172356072,30
+132,NSW Coastal,vp,1961-1990,15.70252129309752,30
+221,VIC Mallee,daily_rain,1961-1990,336.68543511271616,30
+221,VIC Mallee,evap_pan,1961-1990,4.797860374883647,21
+221,VIC Mallee,max_temp,1961-1990,23.05590056420506,30
+221,VIC Mallee,min_temp,1961-1990,9.602991612096305,30
+221,VIC Mallee,radiation,1961-1990,17.553604174136996,30
+221,VIC Mallee,vp,1961-1990,11.142904376612167,30
+222,VIC Wimmera,daily_rain,1961-1990,457.936743752169,30
+222,VIC Wimmera,evap_pan,1961-1990,4.198784905135499,21
+222,VIC Wimmera,max_temp,1961-1990,21.218737974611127,30
+222,VIC Wimmera,min_temp,1961-1990,8.314509864409944,30
+222,VIC Wimmera,radiation,1961-1990,16.38141204615858,30
+222,VIC Wimmera,vp,1961-1990,10.995667746009879,30
+223,VIC Central North,daily_rain,1961-1990,480.8225625153242,30
+223,VIC Central North,evap_pan,1961-1990,4.178595299574066,21
+223,VIC Central North,max_temp,1961-1990,21.562644962442718,30
+223,VIC Central North,min_temp,1961-1990,8.868485417030055,30
+223,VIC Central North,radiation,1961-1990,16.805631183205314,30
+223,VIC Central North,vp,1961-1990,11.263244480173245,30
+231,VIC Southern and Eastern Victoria,daily_rain,1961-1990,615.0259341532608,30
+231,VIC Southern and Eastern Victoria,evap_pan,1961-1990,3.595545350405042,21
+231,VIC Southern and Eastern Victoria,max_temp,1961-1990,19.047789034248957,30
+231,VIC Southern and Eastern Victoria,min_temp,1961-1990,8.137225031802403,30
+231,VIC Southern and Eastern Victoria,radiation,1961-1990,14.895897991103991,30
+231,VIC Southern and Eastern Victoria,vp,1961-1990,11.15191337398419,30
+311,QLD Cape York and the Gulf,daily_rain,1961-1990,1229.7265787237623,30
+311,QLD Cape York and the Gulf,evap_pan,1961-1990,5.598744284531784,21
+311,QLD Cape York and the Gulf,max_temp,1961-1990,29.475137107936234,30
+311,QLD Cape York and the Gulf,min_temp,1961-1990,20.54649279928423,30
+311,QLD Cape York and the Gulf,radiation,1961-1990,19.38711918915863,30
+311,QLD Cape York and the Gulf,vp,1961-1990,23.196832478796882,30
+312,QLD West and South West,daily_rain,1961-1990,341.74580309334414,30
+312,QLD West and South West,evap_pan,1961-1990,6.130643896785404,21
+312,QLD West and South West,max_temp,1961-1990,27.76167517796251,30
+312,QLD West and South West,min_temp,1961-1990,13.881450607637655,30
+312,QLD West and South West,radiation,1961-1990,20.233824800459978,30
+312,QLD West and South West,vp,1961-1990,12.094850935043748,30
+313,QLD Central North,daily_rain,1961-1990,785.8687354506194,30
+313,QLD Central North,evap_pan,1961-1990,5.686685792872365,21
+313,QLD Central North,max_temp,1961-1990,30.025292453651,30
+313,QLD Central North,min_temp,1961-1990,17.21813668913495,30
+313,QLD Central North,radiation,1961-1990,20.251735986950013,30
+313,QLD Central North,vp,1961-1990,18.188786601582095,30
+314,QLD Charleville - Longreach,daily_rain,1961-1990,528.9433824383838,30
+314,QLD Charleville - Longreach,evap_pan,1961-1990,5.979139986349124,21
+314,QLD Charleville - Longreach,max_temp,1961-1990,27.63776015701105,30
+314,QLD Charleville - Longreach,min_temp,1961-1990,12.468899255298032,30
+314,QLD Charleville - Longreach,radiation,1961-1990,20.322743165108932,30
+314,QLD Charleville - Longreach,vp,1961-1990,12.87064954328121,30
+321,QLD Eastern Darling Downs,daily_rain,1961-1990,681.2887989180215,30
+321,QLD Eastern Darling Downs,evap_pan,1961-1990,4.702323374727852,21
+321,QLD Eastern Darling Downs,max_temp,1961-1990,24.839299545005016,30
+321,QLD Eastern Darling Downs,min_temp,1961-1990,11.299689671137829,30
+321,QLD Eastern Darling Downs,radiation,1961-1990,18.737868858532867,30
+321,QLD Eastern Darling Downs,vp,1961-1990,14.513153726182003,30
+322,QLD Western Downs and Central Highlands,daily_rain,1961-1990,578.0820382472103,30
+322,QLD Western Downs and Central Highlands,evap_pan,1961-1990,5.32874252310056,21
+322,QLD Western Downs and Central Highlands,max_temp,1961-1990,27.529856369853864,30
+322,QLD Western Downs and Central Highlands,min_temp,1961-1990,13.297396320206746,30
+322,QLD Western Downs and Central Highlands,radiation,1961-1990,19.672541411013505,30
+322,QLD Western Downs and Central Highlands,vp,1961-1990,14.769190165266135,30
+331,QLD Southern Coastal - Curtis to Moreton,daily_rain,1961-1990,762.3758937898708,30
+331,QLD Southern Coastal - Curtis to Moreton,evap_pan,1961-1990,4.869161699185149,21
+331,QLD Southern Coastal - Curtis to Moreton,max_temp,1961-1990,26.557210351415186,30
+331,QLD Southern Coastal - Curtis to Moreton,min_temp,1961-1990,13.953871935804196,30
+331,QLD Southern Coastal - Curtis to Moreton,radiation,1961-1990,19.11552874681904,30
+331,QLD Southern Coastal - Curtis to Moreton,vp,1961-1990,16.86852721965623,30
+332,QLD Northern Coastal - Mackay to Cairns,daily_rain,1961-1990,2697.702164894921,30
+332,QLD Northern Coastal - Mackay to Cairns,evap_pan,1961-1990,5.276369410294385,21
+332,QLD Northern Coastal - Mackay to Cairns,max_temp,1961-1990,28.573081793615298,30
+332,QLD Northern Coastal - Mackay to Cairns,min_temp,1961-1990,19.455231734552722,30
+332,QLD Northern Coastal - Mackay to Cairns,radiation,1961-1990,18.840014899963798,30
+332,QLD Northern Coastal - Mackay to Cairns,vp,1961-1990,23.27018448120632,30
+411,SA Northern Pastoral,daily_rain,1961-1990,330.51660556486786,30
+411,SA Northern Pastoral,evap_pan,1961-1990,6.037793506448685,21
+411,SA Northern Pastoral,max_temp,1961-1990,23.187408269290643,30
+411,SA Northern Pastoral,min_temp,1961-1990,10.20616327248496,30
+411,SA Northern Pastoral,radiation,1961-1990,18.356392186327938,30
+411,SA Northern Pastoral,vp,1961-1990,11.117120399363044,30
+421,SA Eyre Peninsula,daily_rain,1961-1990,348.85232717951476,30
+421,SA Eyre Peninsula,evap_pan,1961-1990,5.586579970649252,21
+421,SA Eyre Peninsula,max_temp,1961-1990,22.96344281914327,30
+421,SA Eyre Peninsula,min_temp,1961-1990,10.869723361336499,30
+421,SA Eyre Peninsula,radiation,1961-1990,17.548766591508162,30
+421,SA Eyre Peninsula,vp,1961-1990,11.948174243103033,30
+422,SA Murray Lands and Yorke Peninsula,daily_rain,1961-1990,371.13553246777934,30
+422,SA Murray Lands and Yorke Peninsula,evap_pan,1961-1990,4.875698956627838,21
+422,SA Murray Lands and Yorke Peninsula,max_temp,1961-1990,22.42976849083465,30
+422,SA Murray Lands and Yorke Peninsula,min_temp,1961-1990,9.780150332968685,30
+422,SA Murray Lands and Yorke Peninsula,radiation,1961-1990,17.283442896863914,30
+422,SA Murray Lands and Yorke Peninsula,vp,1961-1990,11.294002182058374,30
+431,SA South East,daily_rain,1961-1990,521.9444796044634,30
+431,SA South East,evap_pan,1961-1990,4.257376601823449,21
+431,SA South East,max_temp,1961-1990,20.844399436530512,30
+431,SA South East,min_temp,1961-1990,9.392126077825132,30
+431,SA South East,radiation,1961-1990,15.89485373265017,30
+431,SA South East,vp,1961-1990,11.73599427712424,30
+512,WA Pilbara and Central Pastoral,daily_rain,1961-1990,285.7235763596897,30
+512,WA Pilbara and Central Pastoral,evap_pan,1961-1990,7.0545568307854785,21
+512,WA Pilbara and Central Pastoral,max_temp,1961-1990,27.328470259493965,30
+512,WA Pilbara and Central Pastoral,min_temp,1961-1990,12.838443139052382,30
+512,WA Pilbara and Central Pastoral,radiation,1961-1990,20.391431841980786,30
+512,WA Pilbara and Central Pastoral,vp,1961-1990,11.870623234885318,30
+521,WA Central and Southern Wheat Belt,daily_rain,1961-1990,429.2580686066666,30
+521,WA Central and Southern Wheat Belt,evap_pan,1961-1990,5.227562578307335,21
+521,WA Central and Southern Wheat Belt,max_temp,1961-1990,23.501850653822615,30
+521,WA Central and Southern Wheat Belt,min_temp,1961-1990,10.648269537337807,30
+521,WA Central and Southern Wheat Belt,radiation,1961-1990,18.150858029967686,30
+521,WA Central and Southern Wheat Belt,vp,1961-1990,12.129967693861294,30
+522,WA Northern and Eastern Wheat Belt,daily_rain,1961-1990,331.39165860494575,30
+522,WA Northern and Eastern Wheat Belt,evap_pan,1961-1990,6.24503927515512,21
+522,WA Northern and Eastern Wheat Belt,max_temp,1961-1990,25.112703559297838,30
+522,WA Northern and Eastern Wheat Belt,min_temp,1961-1990,11.347497097909446,30
+522,WA Northern and Eastern Wheat Belt,radiation,1961-1990,19.25817628389465,30
+522,WA Northern and Eastern Wheat Belt,vp,1961-1990,11.74350466586578,30
+531,WA South West Coastal,daily_rain,1961-1990,717.8788660902046,30
+531,WA South West Coastal,evap_pan,1961-1990,4.2292308979238795,21
+531,WA South West Coastal,max_temp,1961-1990,21.689292153582823,30
+531,WA South West Coastal,min_temp,1961-1990,10.485280833063122,30
+531,WA South West Coastal,radiation,1961-1990,16.84790621383391,30
+531,WA South West Coastal,vp,1961-1990,12.660036668983059,30
+631,TAS Tasmania,daily_rain,1961-1990,711.9214376945308,30
+631,TAS Tasmania,evap_pan,1961-1990,2.8113565125603253,21
+631,TAS Tasmania,max_temp,1961-1990,16.42958672952993,30
+631,TAS Tasmania,min_temp,1961-1990,6.539118034215505,30
+631,TAS Tasmania,radiation,1961-1990,14.2953995495478,30
+631,TAS Tasmania,vp,1961-1990,10.064895032330531,30
+712,NT Barkly Tablelands,daily_rain,1961-1990,442.07905649540146,30
+712,NT Barkly Tablelands,evap_pan,1961-1990,7.992560657593894,21
+712,NT Barkly Tablelands,max_temp,1961-1990,33.570406368334346,30
+712,NT Barkly Tablelands,min_temp,1961-1990,19.049956528194,30
+712,NT Barkly Tablelands,radiation,1961-1990,21.34334433088441,30
+712,NT Barkly Tablelands,vp,1961-1990,16.34852178553356,30
+713,NT Victoria River District - Katherine,daily_rain,1961-1990,1070.7348676628376,30
+713,NT Victoria River District - Katherine,evap_pan,1961-1990,6.595891496220252,21
+713,NT Victoria River District - Katherine,max_temp,1961-1990,33.72351361358685,30
+713,NT Victoria River District - Katherine,min_temp,1961-1990,20.307036409878794,30
+713,NT Victoria River District - Katherine,radiation,1961-1990,19.936977445398927,30
+713,NT Victoria River District - Katherine,vp,1961-1990,22.5702001192454,30
+714,NT Top End Darwin,daily_rain,1961-1990,1358.0491911472113,30
+714,NT Top End Darwin,evap_pan,1961-1990,6.308777575497966,21
+714,NT Top End Darwin,max_temp,1961-1990,33.068812644419864,30
+714,NT Top End Darwin,min_temp,1961-1990,21.38333161173204,30
+714,NT Top End Darwin,radiation,1961-1990,19.945755858193927,30
+714,NT Top End Darwin,vp,1961-1990,24.91121402014106,30
+111,NSW Far West,daily_rain,1991-2020,330.4829121008556,30
+111,NSW Far West,evap_pan,1991-2020,5.779837412891697,30
+111,NSW Far West,max_temp,1991-2020,25.449416737082114,30
+111,NSW Far West,min_temp,1991-2020,11.357439638848538,30
+111,NSW Far West,radiation,1991-2020,18.96021267682539,30
+111,NSW Far West,vp,1991-2020,11.442173337966755,30
+121,NSW North West Slopes and Plains,daily_rain,1991-2020,533.4929231001186,30
+121,NSW North West Slopes and Plains,evap_pan,1991-2020,5.567161008384575,30
+121,NSW North West Slopes and Plains,max_temp,1991-2020,26.49500529698388,30
+121,NSW North West Slopes and Plains,min_temp,1991-2020,11.826591245451267,30
+121,NSW North West Slopes and Plains,radiation,1991-2020,19.371641641911435,30
+121,NSW North West Slopes and Plains,vp,1991-2020,13.078818643292005,30
+122,NSW Central West,daily_rain,1991-2020,529.500147147779,30
+122,NSW Central West,evap_pan,1991-2020,5.006913498241924,30
+122,NSW Central West,max_temp,1991-2020,24.23142624473234,30
+122,NSW Central West,min_temp,1991-2020,10.282349870796232,30
+122,NSW Central West,radiation,1991-2020,18.554001181993634,30
+122,NSW Central West,vp,1991-2020,12.11144270275131,30
+123,NSW Riverina,daily_rain,1991-2020,468.92796329708716,30
+123,NSW Riverina,evap_pan,1991-2020,4.600478489606687,30
+123,NSW Riverina,max_temp,1991-2020,23.22365740967542,30
+123,NSW Riverina,min_temp,1991-2020,9.480969610895137,30
+123,NSW Riverina,radiation,1991-2020,17.964625957791664,30
+123,NSW Riverina,vp,1991-2020,11.60003698341682,30
+131,NSW Tablelands (Northern Central and Southern),daily_rain,1991-2020,728.3067316570504,30
+131,NSW Tablelands (Northern Central and Southern),evap_pan,1991-2020,3.6005905769011957,30
+131,NSW Tablelands (Northern Central and Southern),max_temp,1991-2020,20.360288631061348,30
+131,NSW Tablelands (Northern Central and Southern),min_temp,1991-2020,7.4315336559260015,30
+131,NSW Tablelands (Northern Central and Southern),radiation,1991-2020,17.53016655652333,30
+131,NSW Tablelands (Northern Central and Southern),vp,1991-2020,11.651791209548968,30
+132,NSW Coastal,daily_rain,1991-2020,1158.1724540707335,30
+132,NSW Coastal,evap_pan,1991-2020,4.083903203618317,30
+132,NSW Coastal,max_temp,1991-2020,24.00801958621091,30
+132,NSW Coastal,min_temp,1991-2020,12.942448368908234,30
+132,NSW Coastal,radiation,1991-2020,17.493652897676622,30
+132,NSW Coastal,vp,1991-2020,16.013552446125946,30
+221,VIC Mallee,daily_rain,1991-2020,308.3113773056109,30
+221,VIC Mallee,evap_pan,1991-2020,4.941457568821324,30
+221,VIC Mallee,max_temp,1991-2020,23.76736229723041,30
+221,VIC Mallee,min_temp,1991-2020,9.61081691828036,30
+221,VIC Mallee,radiation,1991-2020,17.96751151692405,30
+221,VIC Mallee,vp,1991-2020,11.020618450847946,30
+222,VIC Wimmera,daily_rain,1991-2020,416.9090885451641,30
+222,VIC Wimmera,evap_pan,1991-2020,4.1769203137166935,30
+222,VIC Wimmera,max_temp,1991-2020,21.834663943580594,30
+222,VIC Wimmera,min_temp,1991-2020,8.20522199701957,30
+222,VIC Wimmera,radiation,1991-2020,16.920428985443827,30
+222,VIC Wimmera,vp,1991-2020,10.998826939949614,30
+223,VIC Central North,daily_rain,1991-2020,444.92042549541395,30
+223,VIC Central North,evap_pan,1991-2020,4.085164127240857,30
+223,VIC Central North,max_temp,1991-2020,22.1759261719536,30
+223,VIC Central North,min_temp,1991-2020,8.691097913332017,30
+223,VIC Central North,radiation,1991-2020,17.339487500502297,30
+223,VIC Central North,vp,1991-2020,11.276059491251512,30
+231,VIC Southern and Eastern Victoria,daily_rain,1991-2020,570.8165114460527,30
+231,VIC Southern and Eastern Victoria,evap_pan,1991-2020,3.573940496926853,30
+231,VIC Southern and Eastern Victoria,max_temp,1991-2020,19.464629170192477,30
+231,VIC Southern and Eastern Victoria,min_temp,1991-2020,8.048663389447645,30
+231,VIC Southern and Eastern Victoria,radiation,1991-2020,15.570704372336342,30
+231,VIC Southern and Eastern Victoria,vp,1991-2020,11.356752359302572,30
+311,QLD Cape York and the Gulf,daily_rain,1991-2020,1123.4517488000777,30
+311,QLD Cape York and the Gulf,evap_pan,1991-2020,5.233818517670668,30
+311,QLD Cape York and the Gulf,max_temp,1991-2020,29.795908289344464,30
+311,QLD Cape York and the Gulf,min_temp,1991-2020,20.51329538944177,30
+311,QLD Cape York and the Gulf,radiation,1991-2020,20.92010123594758,30
+311,QLD Cape York and the Gulf,vp,1991-2020,23.44128832055535,30
+312,QLD West and South West,daily_rain,1991-2020,323.4517115727205,30
+312,QLD West and South West,evap_pan,1991-2020,6.754437382185061,30
+312,QLD West and South West,max_temp,1991-2020,28.59640654488281,30
+312,QLD West and South West,min_temp,1991-2020,14.406230233601129,30
+312,QLD West and South West,radiation,1991-2020,20.349511248209147,30
+312,QLD West and South West,vp,1991-2020,12.39559497849555,30
+313,QLD Central North,daily_rain,1991-2020,798.3462012024027,30
+313,QLD Central North,evap_pan,1991-2020,5.732916142925496,30
+313,QLD Central North,max_temp,1991-2020,30.225268145715052,30
+313,QLD Central North,min_temp,1991-2020,17.814670866641716,30
+313,QLD Central North,radiation,1991-2020,21.442501447763718,30
+313,QLD Central North,vp,1991-2020,18.84631078034139,30
+314,QLD Charleville - Longreach,daily_rain,1991-2020,510.8695348701522,30
+314,QLD Charleville - Longreach,evap_pan,1991-2020,6.025431409057586,30
+314,QLD Charleville - Longreach,max_temp,1991-2020,28.40136313535694,30
+314,QLD Charleville - Longreach,min_temp,1991-2020,13.023583987467951,30
+314,QLD Charleville - Longreach,radiation,1991-2020,20.66528161005707,30
+314,QLD Charleville - Longreach,vp,1991-2020,13.298203603930707,30
+321,QLD Eastern Darling Downs,daily_rain,1991-2020,595.075995106538,30
+321,QLD Eastern Darling Downs,evap_pan,1991-2020,4.954938761968664,30
+321,QLD Eastern Darling Downs,max_temp,1991-2020,25.825997204748976,30
+321,QLD Eastern Darling Downs,min_temp,1991-2020,11.512794128502616,30
+321,QLD Eastern Darling Downs,radiation,1991-2020,19.32125449349093,30
+321,QLD Eastern Darling Downs,vp,1991-2020,14.497050687724052,30
+322,QLD Western Downs and Central Highlands,daily_rain,1991-2020,528.6617927730646,30
+322,QLD Western Downs and Central Highlands,evap_pan,1991-2020,5.721787058209773,30
+322,QLD Western Downs and Central Highlands,max_temp,1991-2020,28.39073725566561,30
+322,QLD Western Downs and Central Highlands,min_temp,1991-2020,13.65186147431263,30
+322,QLD Western Downs and Central Highlands,radiation,1991-2020,20.217254690456915,30
+322,QLD Western Downs and Central Highlands,vp,1991-2020,14.906349838057162,30
+331,QLD Southern Coastal - Curtis to Moreton,daily_rain,1991-2020,689.1263072268298,30
+331,QLD Southern Coastal - Curtis to Moreton,evap_pan,1991-2020,5.059397948615555,30
+331,QLD Southern Coastal - Curtis to Moreton,max_temp,1991-2020,27.418179747751775,30
+331,QLD Southern Coastal - Curtis to Moreton,min_temp,1991-2020,14.211610662661823,30
+331,QLD Southern Coastal - Curtis to Moreton,radiation,1991-2020,19.61787059794608,30
+331,QLD Southern Coastal - Curtis to Moreton,vp,1991-2020,17.00087110844986,30
+332,QLD Northern Coastal - Mackay to Cairns,daily_rain,1991-2020,2668.9063848600695,30
+332,QLD Northern Coastal - Mackay to Cairns,evap_pan,1991-2020,5.313097890791405,30
+332,QLD Northern Coastal - Mackay to Cairns,max_temp,1991-2020,28.65546357202846,30
+332,QLD Northern Coastal - Mackay to Cairns,min_temp,1991-2020,19.955786070789607,30
+332,QLD Northern Coastal - Mackay to Cairns,radiation,1991-2020,19.408544630481277,30
+332,QLD Northern Coastal - Mackay to Cairns,vp,1991-2020,23.66083100639655,30
+411,SA Northern Pastoral,daily_rain,1991-2020,314.029030581735,30
+411,SA Northern Pastoral,evap_pan,1991-2020,6.236880944946847,30
+411,SA Northern Pastoral,max_temp,1991-2020,23.689498957875056,30
+411,SA Northern Pastoral,min_temp,1991-2020,10.394389820415883,30
+411,SA Northern Pastoral,radiation,1991-2020,18.80794747399024,30
+411,SA Northern Pastoral,vp,1991-2020,11.29400125567356,30
+421,SA Eyre Peninsula,daily_rain,1991-2020,335.6674672695031,30
+421,SA Eyre Peninsula,evap_pan,1991-2020,5.938584148051705,30
+421,SA Eyre Peninsula,max_temp,1991-2020,23.575391199066114,30
+421,SA Eyre Peninsula,min_temp,1991-2020,11.086224925190926,30
+421,SA Eyre Peninsula,radiation,1991-2020,18.220486505543565,30
+421,SA Eyre Peninsula,vp,1991-2020,12.095074212372886,30
+422,SA Murray Lands and Yorke Peninsula,daily_rain,1991-2020,367.3873265444855,30
+422,SA Murray Lands and Yorke Peninsula,evap_pan,1991-2020,4.997378742121706,30
+422,SA Murray Lands and Yorke Peninsula,max_temp,1991-2020,23.041222373067107,30
+422,SA Murray Lands and Yorke Peninsula,min_temp,1991-2020,9.727439822418564,30
+422,SA Murray Lands and Yorke Peninsula,radiation,1991-2020,17.93105628830751,30
+422,SA Murray Lands and Yorke Peninsula,vp,1991-2020,11.406919928983841,30
+431,SA South East,daily_rain,1991-2020,494.80691780902873,30
+431,SA South East,evap_pan,1991-2020,4.156942532909065,30
+431,SA South East,max_temp,1991-2020,21.315849588396954,30
+431,SA South East,min_temp,1991-2020,9.475398835770024,30
+431,SA South East,radiation,1991-2020,16.733777109566457,30
+431,SA South East,vp,1991-2020,11.858059743945947,30
+512,WA Pilbara and Central Pastoral,daily_rain,1991-2020,283.783906753289,30
+512,WA Pilbara and Central Pastoral,evap_pan,1991-2020,6.748775052473084,30
+512,WA Pilbara and Central Pastoral,max_temp,1991-2020,28.258505183229616,30
+512,WA Pilbara and Central Pastoral,min_temp,1991-2020,13.133187813826043,30
+512,WA Pilbara and Central Pastoral,radiation,1991-2020,20.62935425293373,30
+512,WA Pilbara and Central Pastoral,vp,1991-2020,12.27879944032212,30
+521,WA Central and Southern Wheat Belt,daily_rain,1991-2020,402.5255289819921,30
+521,WA Central and Southern Wheat Belt,evap_pan,1991-2020,5.066337067768078,30
+521,WA Central and Southern Wheat Belt,max_temp,1991-2020,24.091385132804362,30
+521,WA Central and Southern Wheat Belt,min_temp,1991-2020,10.78983069562967,30
+521,WA Central and Southern Wheat Belt,radiation,1991-2020,18.599689619380033,30
+521,WA Central and Southern Wheat Belt,vp,1991-2020,12.492954573594647,30
+522,WA Northern and Eastern Wheat Belt,daily_rain,1991-2020,319.0560704837447,30
+522,WA Northern and Eastern Wheat Belt,evap_pan,1991-2020,5.85905875567981,30
+522,WA Northern and Eastern Wheat Belt,max_temp,1991-2020,25.808347387597276,30
+522,WA Northern and Eastern Wheat Belt,min_temp,1991-2020,11.580306662802537,30
+522,WA Northern and Eastern Wheat Belt,radiation,1991-2020,19.626082734846232,30
+522,WA Northern and Eastern Wheat Belt,vp,1991-2020,12.266747457362397,30
+531,WA South West Coastal,daily_rain,1991-2020,674.1235738038407,30
+531,WA South West Coastal,evap_pan,1991-2020,4.262149401473855,30
+531,WA South West Coastal,max_temp,1991-2020,22.142023185636468,30
+531,WA South West Coastal,min_temp,1991-2020,10.636916916571282,30
+531,WA South West Coastal,radiation,1991-2020,17.29720702494995,30
+531,WA South West Coastal,vp,1991-2020,12.846811702423445,30
+631,TAS Tasmania,daily_rain,1991-2020,656.0019126903865,30
+631,TAS Tasmania,evap_pan,1991-2020,3.0387600888007995,30
+631,TAS Tasmania,max_temp,1991-2020,16.920729662260175,30
+631,TAS Tasmania,min_temp,1991-2020,6.708928899722318,30
+631,TAS Tasmania,radiation,1991-2020,14.283788420448426,30
+631,TAS Tasmania,vp,1991-2020,10.11495308095982,30
+712,NT Barkly Tablelands,daily_rain,1991-2020,625.5318255859435,30
+712,NT Barkly Tablelands,evap_pan,1991-2020,7.861246704932197,30
+712,NT Barkly Tablelands,max_temp,1991-2020,34.07642721554917,30
+712,NT Barkly Tablelands,min_temp,1991-2020,19.236657783449193,30
+712,NT Barkly Tablelands,radiation,1991-2020,22.383586920248952,30
+712,NT Barkly Tablelands,vp,1991-2020,17.00689000462877,30
+713,NT Victoria River District - Katherine,daily_rain,1991-2020,1199.9814364197762,30
+713,NT Victoria River District - Katherine,evap_pan,1991-2020,6.523231674558996,30
+713,NT Victoria River District - Katherine,max_temp,1991-2020,34.114254634553035,30
+713,NT Victoria River District - Katherine,min_temp,1991-2020,20.352163545140197,30
+713,NT Victoria River District - Katherine,radiation,1991-2020,22.090775866830448,30
+713,NT Victoria River District - Katherine,vp,1991-2020,22.676312713925146,30
+714,NT Top End Darwin,daily_rain,1991-2020,1508.8646326442904,30
+714,NT Top End Darwin,evap_pan,1991-2020,6.340857684060867,30
+714,NT Top End Darwin,max_temp,1991-2020,33.901575629722664,30
+714,NT Top End Darwin,min_temp,1991-2020,21.25291576884008,30
+714,NT Top End Darwin,radiation,1991-2020,21.525721264488848,30
+714,NT Top End Darwin,vp,1991-2020,25.111153227345596,30
