@@ -1093,3 +1093,60 @@ writes the 57-row summary; `nbconvert --execute` runs the notebook end-to-end on
 narrative: rising means but persistent lower-tail risk, concentrated in the drier,
 more climate-variable regions. Enables s04 (climate–yield joint view + historical-
 event sanity).
+
+## 2026-07-19 — Phase 03, Step 04: climate × yield linkage + historical-event sanity
+
+**Context:** s04. Decision gate ③ resolved to **A+** (EDA-level sanity overlay + a
+light quantitative anchor; formal cross-pillar historical-event validation stays
+Phase 09). Branch `phase-03-eda`.
+
+**Empirical verification (§2.4):** joined the full-record climate region series to
+the ABARES yields at region-year; both yield and climate are detrended per region
+before correlating, so the strong yield trend and the climate trend cannot
+manufacture a spurious linkage.
+
+**Deliverables:**
+1. `src/processing/climate_yield.py` — region-year panel (rain, tmax, yield +
+   per-region detrended residuals); per-region detrended climate–yield correlations;
+   across-region rainfall-CV vs yield-CV; event-year residual summary.
+2. `scripts/phase03_s04_climate_yield.py` — orchestrator + two committed tables.
+3. `tests/test_climate_yield.py` (6).
+4. `notebooks/03_exploratory_analysis.ipynb` §3: four figures (climate-CV vs
+   yield-CV scatter; per-region annual-rain vs yield correlation; event timeline;
+   event-year anomaly by crop) with interpretations + a §3.5 synthesis. Also dropped
+   the unused `MIN_YEARS` import left in the §2 setup.
+5. `outputs/tables/s04_climate_yield_linkage.csv`, `s04_event_year_anomaly.csv`
+   (committed).
+6. `outputs/figures/s04_*.png` (4; committed).
+
+**Findings (descriptive; inference is Phase 06, formal event validation Phase 09):**
+- **Annual climate poorly predicts year-to-year yield**: detrended corr(annual
+  rainfall, yield) median ≈ −0.04 (wheat), ~0 (barley/canola), and *negative* in the
+  WA wheat-belt / TAS where water is not limiting and annual totals mix in
+  non-growing-season rain; corr(tmax, yield) weakly negative, strongest for canola
+  (−0.22, heat sensitivity). → **empirically motivates the growing-season /
+  water-balance (SPI, SPEI) and heat (EHF, GDD) indicators of Pillar 1 (Phase 04)**,
+  not merely methodological completeness.
+- **Structural signal**: across regions, rainfall CV vs yield detrended-CV is
+  positive but modest (wheat +0.31, barley +0.41, canola +0.44) — climate
+  variability shapes the risk map but is not deterministic.
+- **Event sanity**: droughts recover cleanly as below-trend yield (Millennium
+  −0.14..−0.27, 2018 −0.32..−0.43 across crops); the 2013/2017 heat label does NOT
+  read as low-yield (above trend) — a single-year annual-temperature label does not
+  capture flowering-time heat stress.
+
+**Verification:** `pytest -q` 66 passed (climate_yield adds 6); orchestrator writes
+the two tables; `nbconvert --execute` runs the notebook end-to-end on `.venv` (3.12)
+producing the four figures; the notebook is F401-clean (no unused imports).
+
+**Dependencies:** none new.
+
+**Scope:** no revision; scope stays v5.1. The "annual-resolution climate is
+insufficient" result is a Phase 04 driver, recorded here and carried into
+`methodology.md` at s06.
+
+**Impact:** s04 complete — the climate–yield linkage closes the Phase 03
+where/when/how-much narrative: climate shapes the *structural* risk map, but
+year-to-year yield needs growing-season / water-balance / heat indices; droughts are
+detectable at annual resolution, heat needs finer treatment. Enables s05
+(optional-crop decision) and s06 (closure).
