@@ -1,6 +1,6 @@
 project:
   name: agriculture-risk-monitoring-system
-  scope_version: v5.1
+  scope_version: v5.2
   manifest_schema_version: '1.0'
   description: Data source registry for Project 5. Each entry under 'sources' records canonical
     provenance (retrieval URL, date, retriever), storage layout, semantic schema, known quirks,
@@ -729,3 +729,29 @@ phase02_processed_products:
   notes:
     - SILO processed archive regenerated in Phase 02 s04a after fixing a Phase 01 s04 latitude-flip
       masking bug (see PROJECT_LOG 2026-07-16; methodology.md 7.3).
+
+phase03_processed_products:
+  description: Derived data products created in Phase 03 (Exploratory Analysis).
+    Gitignored data is regenerable from the committed scripts + Phase 01/02 sources;
+    the output tables and figures are committed.
+  products:
+    - key: silo_region_means_full_record
+      path: data/processed/silo_region_means/annual_1961_2024.csv
+      producer: scripts/phase03_s02_silo_full_record.py
+      description: Full-record (1961-2024; evap_pan 1970-2024) cos(lat)-area-weighted SILO
+        region annual means, 6 variables x 30 regions (11,250 rows). Gitignored, regenerable.
+  committed_output_tables:
+    - outputs/tables/s01_input_inventory.csv
+    - outputs/tables/s02_region_climate_baselines.csv
+    - outputs/tables/s03_yield_region_summary.csv
+    - outputs/tables/s04_climate_yield_linkage.csv
+    - outputs/tables/s04_event_year_anomaly.csv
+    - outputs/tables/s05_optional_crop_availability.csv
+  committed_figures: "16 EDA figures under outputs/figures/ - s02_* (6, climate climatology),
+    s03_* (5, yield), s04_* (4, climate-yield + events), s05_* (1, sorghum availability)."
+  notebook: notebooks/03_exploratory_analysis.ipynb (executes end-to-end; sections 0-4).
+  notes:
+    - "Optional-crop decision (scope v5.2): cotton excluded (no region yield data; irrigated);
+      sorghum deferred to future work. See PROJECT_LOG 2026-07-19 s05; methodology.md 8.5."
+    - "Key finding: annual region-aggregated climate weakly predicts year-to-year yield,
+      motivating the Pillar 1 growing-season / water-balance / heat indicators (Phase 04)."
